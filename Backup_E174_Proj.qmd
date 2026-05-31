@@ -878,8 +878,8 @@ train_mat <- us_train_diff %>%
 #| echo: false
 
 bind_rows(
-  us_train_diff %>% features(d_log_gdp,     unitroot_kpss) %>% mutate(variable = "Δ Log GDP"),
-  us_train_diff %>% features(d_log_dd,      unitroot_kpss) %>% mutate(variable = "Δ Log DD"),
+  us_train_diff %>% features(d_log_gdp, unitroot_kpss) %>% mutate(variable = "Δ Log GDP"),
+  us_train_diff %>% features(d_log_dd, unitroot_kpss) %>% mutate(variable = "Δ Log DD"),
   us_train_diff %>% features(d_log_imports, unitroot_kpss) %>% mutate(variable = "Δ Log Imports")
 ) %>%
   dplyr::select(variable, kpss_stat, kpss_pvalue) %>%
