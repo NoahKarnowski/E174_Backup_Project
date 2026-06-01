@@ -12,6 +12,10 @@ format:
 editor: visual
 ---
 
+# AI Disclaimer:
+
+AI, specifically Claude, Perplexity, and Gemini were consulted with to troubleshoot errors, form tables for the output values, and help with cleaning up our code. AI also helped us to add additions making our knitted report very pretty.
+
 ```{r setup}
 #| label: setup
 #| echo: true
@@ -53,6 +57,8 @@ US_GDP <- read.csv("us_gdp.csv")
 
 ## Clean and Join into Tsibble
 
+Here, the chunk below selects the relevant columns from each CSV and removes the rest, then left joins the tables together to make a singular reference table. This master table is also cleaned, set to a tsibble format for time series analysis, and adds logged versions of each varaible's values for future analysis.
+
 ```{r clean-data}
 #| echo: true
 #| message: false
@@ -79,9 +85,7 @@ us_clean <- US_DD %>%
     domestic_demand = sum(domestic_demand, na.rm = TRUE),
     gdp             = sum(gdp,             na.rm = TRUE),
     imports         = sum(imports,         na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  as_tsibble(key = country, index = date)
+    .groups = "drop") %>% as_tsibble(key = country, index = date)
 
 # Add log-transformed columns — stabilises variance and linearises growth
 us_clean <- us_clean %>%
@@ -97,6 +101,8 @@ glimpse(us_clean)
 # Exploratory Analysis
 
 ## Raw Level Plots
+
+Basic time plots of the base variables, GDP, domestic demand, and import values for the US are created below.
 
 ```{r raw-plots}
 #| echo: false
@@ -114,9 +120,11 @@ us_clean %>%
   theme_bw()
 ```
 
-**Analysis:** All three series exhibit clear upward trends with a visible contraction around 2008–09 (Global Financial Crisis) and a sharp drop in 2020 Q2 (COVID-19 pandemic). Imports show the most volatility of the three. The upward drift and variance behaviour motivate a log transformation before modelling.
+**Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial cricis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.
 
 ## Log-Transformed Series
+
+Like the previous chunk, we are creating a time plot of each variable, this time for the logged versions of each variable.
 
 ```{r log-plots}
 #| echo: false
@@ -133,7 +141,7 @@ us_clean %>%
   theme_bw()
 ```
 
-**Analysis:** Log transformation produces more linear growth paths. Variance instability is reduced but the COVID shock remains a prominent outlier in all three series — this will affect residual diagnostics across all models.
+**Analysis:** Log transforming each variable did make the lines smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likey impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.
 
 ## STL Decomposition
 
@@ -157,7 +165,7 @@ us_clean %>%
   labs(title = "STL Decomposition: Log Imports") + theme_bw()
 ```
 
-**Analysis:** All three series share the same decomposition structure: a dominant upward trend, a small but consistent quarterly seasonal pattern (amplitude ≈ ±0.002 for GDP and domestic demand, ≈ ±0.005 for imports), and a remainder capturing the 2008–09 recession and the 2020 COVID collapse. The seasonal component is stable in amplitude (no growth), suggesting additive seasonality on the log scale. The relatively small seasonal amplitude compared to trend means seasonal differencing may not always improve fit — model selection via AICc will determine whether `D=1` is warranted.
+**Analysis:** All three series share the same decomposition pattern of a clear positive trend, consistent seasonal patterns, and a remainder that hovers around 0 (the mean) until the COVID-19 pandemic. The seasonal component is highly consistent across time, so additive instead of multiplicative seasonality should be present in our ETS models. When we use R and other tests to pick the best ETS decomposition, we will know for sure what specifications are needed.
 
 # Train / Test Split
 
@@ -437,12 +445,16 @@ ARIMA models use lagged values and lagged errors to capture autocorrelation stru
 #| echo: false
 #| fig-height: 3
 
+
 us_train %>% ACF(log_gdp,             lag_max = 20) %>% autoplot() +
   labs(title = "ACF: Log GDP (Levels)") + theme_bw()
 us_train %>% ACF(log_domestic_demand, lag_max = 20) %>% autoplot() +
   labs(title = "ACF: Log Domestic Demand (Levels)") + theme_bw()
 us_train %>% ACF(log_imports,         lag_max = 20) %>% autoplot() +
   labs(title = "ACF: Log Imports (Levels)") + theme_bw()
+
+
+
 ```
 
 **Analysis:** A slow, linear decay in the ACF is the hallmark of a non-stationary (unit root) process. All three series should show this pattern — confirming that `d ≥ 1` is needed before fitting ARIMA.
@@ -584,7 +596,7 @@ arima_fit_imp <- us_train %>%
 ```{r arima-ic}
 #| echo: false
 
-# ── Table 1: Log GDP ──────────────────────────────────────────────────────────
+# Table 1: Log GDP
 glance(arima_fit_gdp) %>%
   dplyr::select(.model, AICc, BIC) %>%
   arrange(AICc) %>%
@@ -609,7 +621,7 @@ glance(arima_fit_gdp) %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c") %>%
   kableExtra::row_spec(1, background = "#fffde7")  # highlight best model (lightest yellow)
 
-# ── Table 2: Log Domestic Demand ──────────────────────────────────────────────
+# Table 2: Log Domestic Demand
 glance(arima_fit_dd) %>%
   dplyr::select(.model, AICc, BIC) %>%
   arrange(AICc) %>%
@@ -634,7 +646,7 @@ glance(arima_fit_dd) %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c") %>%
   kableExtra::row_spec(1, background = "#fffde7")
 
-# ── Table 3: Log Imports ──────────────────────────────────────────────────────
+# Table 3: Log Imports
 glance(arima_fit_imp) %>%
   dplyr::select(.model, AICc, BIC) %>%
   arrange(AICc) %>%

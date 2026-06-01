@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Noah K">
+<meta name="author" content="Noah K and Crawford H">
 <meta name="dcterms.date" content="2026-05-31">
 
 <title>Forecasting US National Accounts: GDP, Domestic Demand, and Imports</title>
@@ -88,70 +88,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#data-loading-and-preparation" id="toc-data-loading-and-preparation" class="nav-link active" data-scroll-target="#data-loading-and-preparation"><span class="header-section-number">1</span> Data Loading and Preparation</a>
+  <li><a href="#ai-disclaimer" id="toc-ai-disclaimer" class="nav-link active" data-scroll-target="#ai-disclaimer"><span class="header-section-number">1</span> AI Disclaimer:</a></li>
+  <li><a href="#data-loading-and-preparation" id="toc-data-loading-and-preparation" class="nav-link" data-scroll-target="#data-loading-and-preparation"><span class="header-section-number">2</span> Data Loading and Preparation</a>
   <ul class="collapse">
-  <li><a href="#load-raw-csv-files" id="toc-load-raw-csv-files" class="nav-link" data-scroll-target="#load-raw-csv-files"><span class="header-section-number">1.1</span> Load Raw CSV Files</a></li>
-  <li><a href="#clean-and-join-into-tsibble" id="toc-clean-and-join-into-tsibble" class="nav-link" data-scroll-target="#clean-and-join-into-tsibble"><span class="header-section-number">1.2</span> Clean and Join into Tsibble</a></li>
+  <li><a href="#load-raw-csv-files" id="toc-load-raw-csv-files" class="nav-link" data-scroll-target="#load-raw-csv-files"><span class="header-section-number">2.1</span> Load Raw CSV Files</a></li>
+  <li><a href="#clean-and-join-into-tsibble" id="toc-clean-and-join-into-tsibble" class="nav-link" data-scroll-target="#clean-and-join-into-tsibble"><span class="header-section-number">2.2</span> Clean and Join into Tsibble</a></li>
   </ul></li>
-  <li><a href="#exploratory-analysis" id="toc-exploratory-analysis" class="nav-link" data-scroll-target="#exploratory-analysis"><span class="header-section-number">2</span> Exploratory Analysis</a>
+  <li><a href="#exploratory-analysis" id="toc-exploratory-analysis" class="nav-link" data-scroll-target="#exploratory-analysis"><span class="header-section-number">3</span> Exploratory Analysis</a>
   <ul class="collapse">
-  <li><a href="#raw-level-plots" id="toc-raw-level-plots" class="nav-link" data-scroll-target="#raw-level-plots"><span class="header-section-number">2.1</span> Raw Level Plots</a></li>
-  <li><a href="#log-transformed-series" id="toc-log-transformed-series" class="nav-link" data-scroll-target="#log-transformed-series"><span class="header-section-number">2.2</span> Log-Transformed Series</a></li>
-  <li><a href="#stl-decomposition" id="toc-stl-decomposition" class="nav-link" data-scroll-target="#stl-decomposition"><span class="header-section-number">2.3</span> STL Decomposition</a></li>
+  <li><a href="#raw-level-plots" id="toc-raw-level-plots" class="nav-link" data-scroll-target="#raw-level-plots"><span class="header-section-number">3.1</span> Raw Level Plots</a></li>
+  <li><a href="#log-transformed-series" id="toc-log-transformed-series" class="nav-link" data-scroll-target="#log-transformed-series"><span class="header-section-number">3.2</span> Log-Transformed Series</a></li>
+  <li><a href="#stl-decomposition" id="toc-stl-decomposition" class="nav-link" data-scroll-target="#stl-decomposition"><span class="header-section-number">3.3</span> STL Decomposition</a></li>
   </ul></li>
-  <li><a href="#train-test-split" id="toc-train-test-split" class="nav-link" data-scroll-target="#train-test-split"><span class="header-section-number">3</span> Train / Test Split</a></li>
-  <li><a href="#ets-modelling" id="toc-ets-modelling" class="nav-link" data-scroll-target="#ets-modelling"><span class="header-section-number">4</span> ETS Modelling</a>
+  <li><a href="#train-test-split" id="toc-train-test-split" class="nav-link" data-scroll-target="#train-test-split"><span class="header-section-number">4</span> Train / Test Split</a></li>
+  <li><a href="#ets-modelling" id="toc-ets-modelling" class="nav-link" data-scroll-target="#ets-modelling"><span class="header-section-number">5</span> ETS Modelling</a>
   <ul class="collapse">
-  <li><a href="#fit-multiple-ets-specifications" id="toc-fit-multiple-ets-specifications" class="nav-link" data-scroll-target="#fit-multiple-ets-specifications"><span class="header-section-number">4.1</span> Fit Multiple ETS Specifications</a></li>
-  <li><a href="#ets-model-comparison-aicc-and-bic" id="toc-ets-model-comparison-aicc-and-bic" class="nav-link" data-scroll-target="#ets-model-comparison-aicc-and-bic"><span class="header-section-number">4.2</span> ETS Model Comparison: AICc and BIC</a></li>
-  <li><a href="#ets-residual-diagnostics" id="toc-ets-residual-diagnostics" class="nav-link" data-scroll-target="#ets-residual-diagnostics"><span class="header-section-number">4.3</span> ETS Residual Diagnostics</a></li>
-  <li><a href="#ljung-box-test-on-ets-residuals" id="toc-ljung-box-test-on-ets-residuals" class="nav-link" data-scroll-target="#ljung-box-test-on-ets-residuals"><span class="header-section-number">4.4</span> Ljung-Box Test on ETS Residuals</a></li>
-  <li><a href="#ets-forecast-on-test-set-2024-q1-2025-q4" id="toc-ets-forecast-on-test-set-2024-q1-2025-q4" class="nav-link" data-scroll-target="#ets-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">4.5</span> ETS Forecast on Test Set (2024 Q1 – 2025 Q4)</a></li>
-  <li><a href="#ets-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-ets-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#ets-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">4.6</span> ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a></li>
+  <li><a href="#fit-multiple-ets-specifications" id="toc-fit-multiple-ets-specifications" class="nav-link" data-scroll-target="#fit-multiple-ets-specifications"><span class="header-section-number">5.1</span> Fit Multiple ETS Specifications</a></li>
+  <li><a href="#ets-model-comparison-aicc-and-bic" id="toc-ets-model-comparison-aicc-and-bic" class="nav-link" data-scroll-target="#ets-model-comparison-aicc-and-bic"><span class="header-section-number">5.2</span> ETS Model Comparison: AICc and BIC</a></li>
+  <li><a href="#ets-residual-diagnostics" id="toc-ets-residual-diagnostics" class="nav-link" data-scroll-target="#ets-residual-diagnostics"><span class="header-section-number">5.3</span> ETS Residual Diagnostics</a></li>
+  <li><a href="#ljung-box-test-on-ets-residuals" id="toc-ljung-box-test-on-ets-residuals" class="nav-link" data-scroll-target="#ljung-box-test-on-ets-residuals"><span class="header-section-number">5.4</span> Ljung-Box Test on ETS Residuals</a></li>
+  <li><a href="#ets-forecast-on-test-set-2024-q1-2025-q4" id="toc-ets-forecast-on-test-set-2024-q1-2025-q4" class="nav-link" data-scroll-target="#ets-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">5.5</span> ETS Forecast on Test Set (2024 Q1 – 2025 Q4)</a></li>
+  <li><a href="#ets-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-ets-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#ets-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">5.6</span> ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a></li>
   </ul></li>
-  <li><a href="#arima-modelling" id="toc-arima-modelling" class="nav-link" data-scroll-target="#arima-modelling"><span class="header-section-number">5</span> ARIMA Modelling</a>
+  <li><a href="#arima-modelling" id="toc-arima-modelling" class="nav-link" data-scroll-target="#arima-modelling"><span class="header-section-number">6</span> ARIMA Modelling</a>
   <ul class="collapse">
-  <li><a href="#unit-root-tests-and-differencing-diagnostics" id="toc-unit-root-tests-and-differencing-diagnostics" class="nav-link" data-scroll-target="#unit-root-tests-and-differencing-diagnostics"><span class="header-section-number">5.1</span> Unit Root Tests and Differencing Diagnostics</a>
+  <li><a href="#unit-root-tests-and-differencing-diagnostics" id="toc-unit-root-tests-and-differencing-diagnostics" class="nav-link" data-scroll-target="#unit-root-tests-and-differencing-diagnostics"><span class="header-section-number">6.1</span> Unit Root Tests and Differencing Diagnostics</a>
   <ul class="collapse">
-  <li><a href="#acf-of-log-levels" id="toc-acf-of-log-levels" class="nav-link" data-scroll-target="#acf-of-log-levels"><span class="header-section-number">5.1.1</span> ACF of Log Levels</a></li>
-  <li><a href="#kpss-tests-and-recommended-differencing-order" id="toc-kpss-tests-and-recommended-differencing-order" class="nav-link" data-scroll-target="#kpss-tests-and-recommended-differencing-order"><span class="header-section-number">5.1.2</span> KPSS Tests and Recommended Differencing Order</a></li>
-  <li><a href="#acf-and-pacf-of-first-differenced-series" id="toc-acf-and-pacf-of-first-differenced-series" class="nav-link" data-scroll-target="#acf-and-pacf-of-first-differenced-series"><span class="header-section-number">5.1.3</span> ACF and PACF of First-Differenced Series</a></li>
+  <li><a href="#acf-of-log-levels" id="toc-acf-of-log-levels" class="nav-link" data-scroll-target="#acf-of-log-levels"><span class="header-section-number">6.1.1</span> ACF of Log Levels</a></li>
+  <li><a href="#kpss-tests-and-recommended-differencing-order" id="toc-kpss-tests-and-recommended-differencing-order" class="nav-link" data-scroll-target="#kpss-tests-and-recommended-differencing-order"><span class="header-section-number">6.1.2</span> KPSS Tests and Recommended Differencing Order</a></li>
+  <li><a href="#acf-and-pacf-of-first-differenced-series" id="toc-acf-and-pacf-of-first-differenced-series" class="nav-link" data-scroll-target="#acf-and-pacf-of-first-differenced-series"><span class="header-section-number">6.1.3</span> ACF and PACF of First-Differenced Series</a></li>
   </ul></li>
-  <li><a href="#fit-arima-specifications" id="toc-fit-arima-specifications" class="nav-link" data-scroll-target="#fit-arima-specifications"><span class="header-section-number">5.2</span> Fit ARIMA Specifications</a></li>
-  <li><a href="#arima-model-comparison-aicc-and-bic" id="toc-arima-model-comparison-aicc-and-bic" class="nav-link" data-scroll-target="#arima-model-comparison-aicc-and-bic"><span class="header-section-number">5.3</span> ARIMA Model Comparison: AICc and BIC</a></li>
-  <li><a href="#auto-arima-model-report" id="toc-auto-arima-model-report" class="nav-link" data-scroll-target="#auto-arima-model-report"><span class="header-section-number">5.4</span> Auto-ARIMA Model Report</a></li>
-  <li><a href="#arima-residual-diagnostics" id="toc-arima-residual-diagnostics" class="nav-link" data-scroll-target="#arima-residual-diagnostics"><span class="header-section-number">5.5</span> ARIMA Residual Diagnostics</a></li>
-  <li><a href="#ljung-box-test-on-arima-residuals" id="toc-ljung-box-test-on-arima-residuals" class="nav-link" data-scroll-target="#ljung-box-test-on-arima-residuals"><span class="header-section-number">5.6</span> Ljung-Box Test on ARIMA Residuals</a></li>
-  <li><a href="#arima-forecast-on-test-set-2024-q1-2025-q4" id="toc-arima-forecast-on-test-set-2024-q1-2025-q4" class="nav-link" data-scroll-target="#arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">5.7</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</a></li>
-  <li><a href="#arima-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">5.8</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a></li>
+  <li><a href="#fit-arima-specifications" id="toc-fit-arima-specifications" class="nav-link" data-scroll-target="#fit-arima-specifications"><span class="header-section-number">6.2</span> Fit ARIMA Specifications</a></li>
+  <li><a href="#arima-model-comparison-aicc-and-bic" id="toc-arima-model-comparison-aicc-and-bic" class="nav-link" data-scroll-target="#arima-model-comparison-aicc-and-bic"><span class="header-section-number">6.3</span> ARIMA Model Comparison: AICc and BIC</a></li>
+  <li><a href="#auto-arima-model-report" id="toc-auto-arima-model-report" class="nav-link" data-scroll-target="#auto-arima-model-report"><span class="header-section-number">6.4</span> Auto-ARIMA Model Report</a></li>
+  <li><a href="#arima-residual-diagnostics" id="toc-arima-residual-diagnostics" class="nav-link" data-scroll-target="#arima-residual-diagnostics"><span class="header-section-number">6.5</span> ARIMA Residual Diagnostics</a></li>
+  <li><a href="#ljung-box-test-on-arima-residuals" id="toc-ljung-box-test-on-arima-residuals" class="nav-link" data-scroll-target="#ljung-box-test-on-arima-residuals"><span class="header-section-number">6.6</span> Ljung-Box Test on ARIMA Residuals</a></li>
+  <li><a href="#arima-forecast-on-test-set-2024-q1-2025-q4" id="toc-arima-forecast-on-test-set-2024-q1-2025-q4" class="nav-link" data-scroll-target="#arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">6.7</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</a></li>
+  <li><a href="#arima-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">6.8</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a></li>
   </ul></li>
-  <li><a href="#var-modelling" id="toc-var-modelling" class="nav-link" data-scroll-target="#var-modelling"><span class="header-section-number">6</span> VAR Modelling</a>
+  <li><a href="#var-modelling" id="toc-var-modelling" class="nav-link" data-scroll-target="#var-modelling"><span class="header-section-number">7</span> VAR Modelling</a>
   <ul class="collapse">
-  <li><a href="#prepare-differenced-data" id="toc-prepare-differenced-data" class="nav-link" data-scroll-target="#prepare-differenced-data"><span class="header-section-number">6.1</span> Prepare Differenced Data</a></li>
-  <li><a href="#stationarity-check-on-differenced-series" id="toc-stationarity-check-on-differenced-series" class="nav-link" data-scroll-target="#stationarity-check-on-differenced-series"><span class="header-section-number">6.2</span> Stationarity Check on Differenced Series</a></li>
-  <li><a href="#acf-of-differenced-series" id="toc-acf-of-differenced-series" class="nav-link" data-scroll-target="#acf-of-differenced-series"><span class="header-section-number">6.3</span> ACF of Differenced Series</a></li>
-  <li><a href="#var-lag-selection" id="toc-var-lag-selection" class="nav-link" data-scroll-target="#var-lag-selection"><span class="header-section-number">6.4</span> VAR Lag Selection</a></li>
-  <li><a href="#fit-var-specifications-vars-package" id="toc-fit-var-specifications-vars-package" class="nav-link" data-scroll-target="#fit-var-specifications-vars-package"><span class="header-section-number">6.5</span> Fit VAR Specifications (vars package)</a></li>
-  <li><a href="#var-residual-diagnostics" id="toc-var-residual-diagnostics" class="nav-link" data-scroll-target="#var-residual-diagnostics"><span class="header-section-number">6.6</span> VAR Residual Diagnostics</a>
+  <li><a href="#prepare-differenced-data" id="toc-prepare-differenced-data" class="nav-link" data-scroll-target="#prepare-differenced-data"><span class="header-section-number">7.1</span> Prepare Differenced Data</a></li>
+  <li><a href="#stationarity-check-on-differenced-series" id="toc-stationarity-check-on-differenced-series" class="nav-link" data-scroll-target="#stationarity-check-on-differenced-series"><span class="header-section-number">7.2</span> Stationarity Check on Differenced Series</a></li>
+  <li><a href="#acf-of-differenced-series" id="toc-acf-of-differenced-series" class="nav-link" data-scroll-target="#acf-of-differenced-series"><span class="header-section-number">7.3</span> ACF of Differenced Series</a></li>
+  <li><a href="#var-lag-selection" id="toc-var-lag-selection" class="nav-link" data-scroll-target="#var-lag-selection"><span class="header-section-number">7.4</span> VAR Lag Selection</a></li>
+  <li><a href="#fit-var-specifications-vars-package" id="toc-fit-var-specifications-vars-package" class="nav-link" data-scroll-target="#fit-var-specifications-vars-package"><span class="header-section-number">7.5</span> Fit VAR Specifications (vars package)</a></li>
+  <li><a href="#var-residual-diagnostics" id="toc-var-residual-diagnostics" class="nav-link" data-scroll-target="#var-residual-diagnostics"><span class="header-section-number">7.6</span> VAR Residual Diagnostics</a>
   <ul class="collapse">
-  <li><a href="#portmanteau-serial-correlation-test" id="toc-portmanteau-serial-correlation-test" class="nav-link" data-scroll-target="#portmanteau-serial-correlation-test"><span class="header-section-number">6.6.1</span> Portmanteau Serial Correlation Test</a></li>
-  <li><a href="#gg_tsresiduals-on-var-residuals" id="toc-gg_tsresiduals-on-var-residuals" class="nav-link" data-scroll-target="#gg_tsresiduals-on-var-residuals"><span class="header-section-number">6.6.2</span> gg_tsresiduals on VAR Residuals</a></li>
+  <li><a href="#portmanteau-serial-correlation-test" id="toc-portmanteau-serial-correlation-test" class="nav-link" data-scroll-target="#portmanteau-serial-correlation-test"><span class="header-section-number">7.6.1</span> Portmanteau Serial Correlation Test</a></li>
+  <li><a href="#gg_tsresiduals-on-var-residuals" id="toc-gg_tsresiduals-on-var-residuals" class="nav-link" data-scroll-target="#gg_tsresiduals-on-var-residuals"><span class="header-section-number">7.6.2</span> gg_tsresiduals on VAR Residuals</a></li>
   </ul></li>
-  <li><a href="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline" id="toc-fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="nav-link" data-scroll-target="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">6.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</a></li>
-  <li><a href="#var-forecast-on-test-set-differenced-log-scale" id="toc-var-forecast-on-test-set-differenced-log-scale" class="nav-link" data-scroll-target="#var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">6.8</span> VAR Forecast on Test Set — Differenced Log Scale</a></li>
-  <li><a href="#var-forecast-on-test-set-back-transformed-to-levels" id="toc-var-forecast-on-test-set-back-transformed-to-levels" class="nav-link" data-scroll-target="#var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">6.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</a></li>
-  <li><a href="#var-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-var-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">6.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a>
+  <li><a href="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline" id="toc-fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="nav-link" data-scroll-target="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">7.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</a></li>
+  <li><a href="#var-forecast-on-test-set-differenced-log-scale" id="toc-var-forecast-on-test-set-differenced-log-scale" class="nav-link" data-scroll-target="#var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">7.8</span> VAR Forecast on Test Set — Differenced Log Scale</a></li>
+  <li><a href="#var-forecast-on-test-set-back-transformed-to-levels" id="toc-var-forecast-on-test-set-back-transformed-to-levels" class="nav-link" data-scroll-target="#var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">7.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</a></li>
+  <li><a href="#var-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-var-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">7.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a>
   <ul class="collapse">
-  <li><a href="#differenced-log-scale" id="toc-differenced-log-scale" class="nav-link" data-scroll-target="#differenced-log-scale"><span class="header-section-number">6.10.1</span> Differenced Log Scale</a></li>
-  <li><a href="#back-transformed-to-log-levels" id="toc-back-transformed-to-log-levels" class="nav-link" data-scroll-target="#back-transformed-to-log-levels"><span class="header-section-number">6.10.2</span> Back-Transformed to Log Levels</a></li>
+  <li><a href="#differenced-log-scale" id="toc-differenced-log-scale" class="nav-link" data-scroll-target="#differenced-log-scale"><span class="header-section-number">7.10.1</span> Differenced Log Scale</a></li>
+  <li><a href="#back-transformed-to-log-levels" id="toc-back-transformed-to-log-levels" class="nav-link" data-scroll-target="#back-transformed-to-log-levels"><span class="header-section-number">7.10.2</span> Back-Transformed to Log Levels</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#model-comparison-and-selection" id="toc-model-comparison-and-selection" class="nav-link" data-scroll-target="#model-comparison-and-selection"><span class="header-section-number">7</span> Model Comparison and Selection</a>
+  <li><a href="#model-comparison-and-selection" id="toc-model-comparison-and-selection" class="nav-link" data-scroll-target="#model-comparison-and-selection"><span class="header-section-number">8</span> Model Comparison and Selection</a>
   <ul class="collapse">
-  <li><a href="#unified-accuracy-table-best-models-across-all-methods" id="toc-unified-accuracy-table-best-models-across-all-methods" class="nav-link" data-scroll-target="#unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">7.1</span> Unified Accuracy Table: Best Models Across All Methods</a></li>
-  <li><a href="#final-model-selection-summary" id="toc-final-model-selection-summary" class="nav-link" data-scroll-target="#final-model-selection-summary"><span class="header-section-number">7.2</span> Final Model Selection Summary</a></li>
+  <li><a href="#unified-accuracy-table-best-models-across-all-methods" id="toc-unified-accuracy-table-best-models-across-all-methods" class="nav-link" data-scroll-target="#unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">8.1</span> Unified Accuracy Table: Best Models Across All Methods</a></li>
+  <li><a href="#final-model-selection-summary" id="toc-final-model-selection-summary" class="nav-link" data-scroll-target="#final-model-selection-summary"><span class="header-section-number">8.2</span> Final Model Selection Summary</a></li>
   </ul></li>
-  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">8</span> Conclusion</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">9</span> Conclusion</a></li>
   </ul>
 </nav>
 </div>
@@ -169,7 +170,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Noah K </p>
+             <p>Noah K and Crawford H </p>
           </div>
   </div>
     
@@ -188,6 +189,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<section id="ai-disclaimer" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> AI Disclaimer:</h1>
+<p>AI, specifically Claude, Perplexity, and Gemini were consulted with to troubleshoot errors, form tables for the output values, and help with cleaning up our code.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -205,10 +209,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<section id="data-loading-and-preparation" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Data Loading and Preparation</h1>
-<section id="load-raw-csv-files" class="level2" data-number="1.1">
-<h2 data-number="1.1" class="anchored" data-anchor-id="load-raw-csv-files"><span class="header-section-number">1.1</span> Load Raw CSV Files</h2>
+</section>
+<section id="data-loading-and-preparation" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Data Loading and Preparation</h1>
+<section id="load-raw-csv-files" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="load-raw-csv-files"><span class="header-section-number">2.1</span> Load Raw CSV Files</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -223,8 +228,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 </section>
-<section id="clean-and-join-into-tsibble" class="level2" data-number="1.2">
-<h2 data-number="1.2" class="anchored" data-anchor-id="clean-and-join-into-tsibble"><span class="header-section-number">1.2</span> Clean and Join into Tsibble</h2>
+<section id="clean-and-join-into-tsibble" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="clean-and-join-into-tsibble"><span class="header-section-number">2.2</span> Clean and Join into Tsibble</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -279,10 +284,10 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </section>
 </section>
-<section id="exploratory-analysis" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> Exploratory Analysis</h1>
-<section id="raw-level-plots" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="raw-level-plots"><span class="header-section-number">2.1</span> Raw Level Plots</h2>
+<section id="exploratory-analysis" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Exploratory Analysis</h1>
+<section id="raw-level-plots" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="raw-level-plots"><span class="header-section-number">3.1</span> Raw Level Plots</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -294,8 +299,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> All three series exhibit clear upward trends with a visible contraction around 2008–09 (Global Financial Crisis) and a sharp drop in 2020 Q2 (COVID-19 pandemic). Imports show the most volatility of the three. The upward drift and variance behaviour motivate a log transformation before modelling.</p>
 </section>
-<section id="log-transformed-series" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="log-transformed-series"><span class="header-section-number">2.2</span> Log-Transformed Series</h2>
+<section id="log-transformed-series" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="log-transformed-series"><span class="header-section-number">3.2</span> Log-Transformed Series</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -307,8 +312,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> Log transformation produces more linear growth paths. Variance instability is reduced but the COVID shock remains a prominent outlier in all three series — this will affect residual diagnostics across all models.</p>
 </section>
-<section id="stl-decomposition" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="stl-decomposition"><span class="header-section-number">2.3</span> STL Decomposition</h2>
+<section id="stl-decomposition" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="stl-decomposition"><span class="header-section-number">3.3</span> STL Decomposition</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -335,8 +340,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 <p><strong>Analysis:</strong> All three series share the same decomposition structure: a dominant upward trend, a small but consistent quarterly seasonal pattern (amplitude ≈ ±0.002 for GDP and domestic demand, ≈ ±0.005 for imports), and a remainder capturing the 2008–09 recession and the 2020 COVID collapse. The seasonal component is stable in amplitude (no growth), suggesting additive seasonality on the log scale. The relatively small seasonal amplitude compared to trend means seasonal differencing may not always improve fit — model selection via AICc will determine whether <code>D=1</code> is warranted.</p>
 </section>
 </section>
-<section id="train-test-split" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Train / Test Split</h1>
+<section id="train-test-split" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Train / Test Split</h1>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -359,11 +364,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </section>
-<section id="ets-modelling" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> ETS Modelling</h1>
+<section id="ets-modelling" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> ETS Modelling</h1>
 <p>ETS (Error–Trend–Seasonal) models are state-space models that decompose a series into three exponentially smoothed components. Because all series are log-transformed, additive ETS on the log scale is equivalent to multiplicative ETS on the original scale.</p>
-<section id="fit-multiple-ets-specifications" class="level2" data-number="4.1">
-<h2 data-number="4.1" class="anchored" data-anchor-id="fit-multiple-ets-specifications"><span class="header-section-number">4.1</span> Fit Multiple ETS Specifications</h2>
+<section id="fit-multiple-ets-specifications" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="fit-multiple-ets-specifications"><span class="header-section-number">5.1</span> Fit Multiple ETS Specifications</h2>
 <p>Five specifications are fit per variable: an automatically selected model, two damped/undamped additive variants, and one full additive seasonal model. Residuals are checked <em>before</em> using the models for forecasting to confirm white-noise assumptions.</p>
 <div class="cell">
 <details class="code-fold">
@@ -400,8 +405,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </details>
 </div>
 </section>
-<section id="ets-model-comparison-aicc-and-bic" class="level2" data-number="4.2">
-<h2 data-number="4.2" class="anchored" data-anchor-id="ets-model-comparison-aicc-and-bic"><span class="header-section-number">4.2</span> ETS Model Comparison: AICc and BIC</h2>
+<section id="ets-model-comparison-aicc-and-bic" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="ets-model-comparison-aicc-and-bic"><span class="header-section-number">5.2</span> ETS Model Comparison: AICc and BIC</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -523,8 +528,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> Lower AICc indicates a better penalised likelihood. Note whether the auto-selected model agrees with the manually specified winner. Damped trend models (<code>Ad</code>) typically win on longer series with decelerating growth — check whether that is the case here.</p>
 </section>
-<section id="ets-residual-diagnostics" class="level2" data-number="4.3">
-<h2 data-number="4.3" class="anchored" data-anchor-id="ets-residual-diagnostics"><span class="header-section-number">4.3</span> ETS Residual Diagnostics</h2>
+<section id="ets-residual-diagnostics" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="ets-residual-diagnostics"><span class="header-section-number">5.3</span> ETS Residual Diagnostics</h2>
 <p>Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show: (1) no autocorrelation in the time plot, (2) ACF spikes within bounds, and (3) a roughly normal histogram.</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -551,8 +556,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> Examine each panel. The 2020 Q2 COVID shock will appear as a large spike in the time plot and may widen the histogram tails — this is a structural break that ETS cannot capture. If ACF lags remain within bounds (aside from the outlier period), the white-noise assumption is broadly satisfied. Any significant ACF structure at seasonal lags (lag 4, 8) would suggest a seasonal ETS component is needed.</p>
 </section>
-<section id="ljung-box-test-on-ets-residuals" class="level2" data-number="4.4">
-<h2 data-number="4.4" class="anchored" data-anchor-id="ljung-box-test-on-ets-residuals"><span class="header-section-number">4.4</span> Ljung-Box Test on ETS Residuals</h2>
+<section id="ljung-box-test-on-ets-residuals" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="ljung-box-test-on-ets-residuals"><span class="header-section-number">5.4</span> Ljung-Box Test on ETS Residuals</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -586,8 +591,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> A p-value &gt; 0.05 indicates failure to reject the null of no autocorrelation in residuals — i.e., white noise is satisfied. P-values below 0.05 flag remaining structure the model has not captured.</p>
 </section>
-<section id="ets-forecast-on-test-set-2024-q1-2025-q4" class="level2" data-number="4.5">
-<h2 data-number="4.5" class="anchored" data-anchor-id="ets-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">4.5</span> ETS Forecast on Test Set (2024 Q1 – 2025 Q4)</h2>
+<section id="ets-forecast-on-test-set-2024-q1-2025-q4" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="ets-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">5.5</span> ETS Forecast on Test Set (2024 Q1 – 2025 Q4)</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -769,8 +774,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> Compare the forecast path against actuals for each variable. Note whether the model captures the post-COVID recovery trajectory. Imports tends to be the hardest to forecast due to its higher remainder variance identified in STL. Check whether the actuals fall within the 80% prediction interval — if not, the model’s uncertainty is underestimated.</p>
 </section>
-<section id="ets-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="4.6">
-<h2 data-number="4.6" class="anchored" data-anchor-id="ets-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">4.6</span> ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
+<section id="ets-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="ets-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">5.6</span> ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
 <p>Models are refit on the <strong>full dataset</strong> before extrapolating forward.</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -798,13 +803,13 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 <p><strong>Analysis:</strong> Forward forecasts reflect the trend and seasonal structure estimated over the full 2000–2025 period. Prediction intervals widen as the horizon extends. The damped trend variant (if selected) will produce more conservative long-run projections than a linear trend model.</p>
 </section>
 </section>
-<section id="arima-modelling" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> ARIMA Modelling</h1>
+<section id="arima-modelling" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> ARIMA Modelling</h1>
 <p>ARIMA models use lagged values and lagged errors to capture autocorrelation structure after differencing to achieve stationarity. The differencing order <code>d</code> is determined by unit root tests; seasonal differencing <code>D</code> is evaluated via AICc.</p>
-<section id="unit-root-tests-and-differencing-diagnostics" class="level2" data-number="5.1">
-<h2 data-number="5.1" class="anchored" data-anchor-id="unit-root-tests-and-differencing-diagnostics"><span class="header-section-number">5.1</span> Unit Root Tests and Differencing Diagnostics</h2>
-<section id="acf-of-log-levels" class="level3" data-number="5.1.1">
-<h3 data-number="5.1.1" class="anchored" data-anchor-id="acf-of-log-levels"><span class="header-section-number">5.1.1</span> ACF of Log Levels</h3>
+<section id="unit-root-tests-and-differencing-diagnostics" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="unit-root-tests-and-differencing-diagnostics"><span class="header-section-number">6.1</span> Unit Root Tests and Differencing Diagnostics</h2>
+<section id="acf-of-log-levels" class="level3" data-number="6.1.1">
+<h3 data-number="6.1.1" class="anchored" data-anchor-id="acf-of-log-levels"><span class="header-section-number">6.1.1</span> ACF of Log Levels</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -830,8 +835,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> A slow, linear decay in the ACF is the hallmark of a non-stationary (unit root) process. All three series should show this pattern — confirming that <code>d ≥ 1</code> is needed before fitting ARIMA.</p>
 </section>
-<section id="kpss-tests-and-recommended-differencing-order" class="level3" data-number="5.1.2">
-<h3 data-number="5.1.2" class="anchored" data-anchor-id="kpss-tests-and-recommended-differencing-order"><span class="header-section-number">5.1.2</span> KPSS Tests and Recommended Differencing Order</h3>
+<section id="kpss-tests-and-recommended-differencing-order" class="level3" data-number="6.1.2">
+<h3 data-number="6.1.2" class="anchored" data-anchor-id="kpss-tests-and-recommended-differencing-order"><span class="header-section-number">6.1.2</span> KPSS Tests and Recommended Differencing Order</h3>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -890,8 +895,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> KPSS null is stationarity — a small p-value (&lt; 0.05) rejects stationarity and confirms differencing is needed. <code>ndiffs</code> will typically return 1 for all three series given the strong upward trends observed.</p>
 </section>
-<section id="acf-and-pacf-of-first-differenced-series" class="level3" data-number="5.1.3">
-<h3 data-number="5.1.3" class="anchored" data-anchor-id="acf-and-pacf-of-first-differenced-series"><span class="header-section-number">5.1.3</span> ACF and PACF of First-Differenced Series</h3>
+<section id="acf-and-pacf-of-first-differenced-series" class="level3" data-number="6.1.3">
+<h3 data-number="6.1.3" class="anchored" data-anchor-id="acf-and-pacf-of-first-differenced-series"><span class="header-section-number">6.1.3</span> ACF and PACF of First-Differenced Series</h3>
 <p>After applying <code>d=1</code>, the ACF and PACF of the differenced series reveal the AR and MA orders.</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -920,8 +925,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 <p>Check whether ACF at lag 4 is significant — if so, a seasonal MA term <code>PDQ(0,1,1)</code> is warranted.</p>
 </section>
 </section>
-<section id="fit-arima-specifications" class="level2" data-number="5.2">
-<h2 data-number="5.2" class="anchored" data-anchor-id="fit-arima-specifications"><span class="header-section-number">5.2</span> Fit ARIMA Specifications</h2>
+<section id="fit-arima-specifications" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="fit-arima-specifications"><span class="header-section-number">6.2</span> Fit ARIMA Specifications</h2>
 <p>Based on the ACF/PACF diagnostics above, three manual specifications are fit alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality.</p>
 <div class="cell">
 <details class="code-fold">
@@ -958,8 +963,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </details>
 </div>
 </section>
-<section id="arima-model-comparison-aicc-and-bic" class="level2" data-number="5.3">
-<h2 data-number="5.3" class="anchored" data-anchor-id="arima-model-comparison-aicc-and-bic"><span class="header-section-number">5.3</span> ARIMA Model Comparison: AICc and BIC</h2>
+<section id="arima-model-comparison-aicc-and-bic" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="arima-model-comparison-aicc-and-bic"><span class="header-section-number">6.3</span> ARIMA Model Comparison: AICc and BIC</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -1081,8 +1086,8 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 <p><strong>Analysis:</strong> Note which model wins on AICc vs BIC — BIC penalises parameters more heavily so it tends to select simpler specifications. If the auto model wins, check what orders it selected via <code>report()</code>. Seasonal specs winning over non-seasonal ones would confirm the STL seasonal component is large enough to matter for ARIMA.</p>
 </section>
-<section id="auto-arima-model-report" class="level2" data-number="5.4">
-<h2 data-number="5.4" class="anchored" data-anchor-id="auto-arima-model-report"><span class="header-section-number">5.4</span> Auto-ARIMA Model Report</h2>
+<section id="auto-arima-model-report" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="auto-arima-model-report"><span class="header-section-number">6.4</span> Auto-ARIMA Model Report</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>Series: log_gdp 
@@ -1122,8 +1127,8 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 </div>
 </section>
-<section id="arima-residual-diagnostics" class="level2" data-number="5.5">
-<h2 data-number="5.5" class="anchored" data-anchor-id="arima-residual-diagnostics"><span class="header-section-number">5.5</span> ARIMA Residual Diagnostics</h2>
+<section id="arima-residual-diagnostics" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="arima-residual-diagnostics"><span class="header-section-number">6.5</span> ARIMA Residual Diagnostics</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1149,8 +1154,8 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 <p><strong>Analysis:</strong> The 2020 Q2 COVID spike will dominate the residual time plot for all three variables. This is a structural break that differencing and ARIMA orders cannot absorb — it inflates residual variance and may push ACF spikes into significance at nearby lags. If ACF structure is primarily confined to the COVID period, the white-noise assumption is approximately satisfied for the rest of the sample. A formal outlier correction (intervention variable) is beyond the current scope.</p>
 </section>
-<section id="ljung-box-test-on-arima-residuals" class="level2" data-number="5.6">
-<h2 data-number="5.6" class="anchored" data-anchor-id="ljung-box-test-on-arima-residuals"><span class="header-section-number">5.6</span> Ljung-Box Test on ARIMA Residuals</h2>
+<section id="ljung-box-test-on-arima-residuals" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="ljung-box-test-on-arima-residuals"><span class="header-section-number">6.6</span> Ljung-Box Test on ARIMA Residuals</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-bordered table-condensed caption-top table-sm small">
@@ -1183,8 +1188,8 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 </div>
 </section>
-<section id="arima-forecast-on-test-set-2024-q1-2025-q4" class="level2" data-number="5.7">
-<h2 data-number="5.7" class="anchored" data-anchor-id="arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">5.7</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</h2>
+<section id="arima-forecast-on-test-set-2024-q1-2025-q4" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">6.7</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-bordered table-condensed caption-top table-sm small">
@@ -1349,8 +1354,8 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 <p><strong>Analysis:</strong> Compare ARIMA forecast accuracy to ETS from the prior section. ARIMA typically handles short-run autocorrelation structure better, while ETS handles trends more smoothly. Imports is the most challenging — higher remainder variance from the STL decomposition translates into wider prediction intervals and higher RMSE.</p>
 </section>
-<section id="arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="5.8">
-<h2 data-number="5.8" class="anchored" data-anchor-id="arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">5.8</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
+<section id="arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">6.8</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1377,12 +1382,12 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 <p><strong>Analysis:</strong> Forward forecasts from the full-data ARIMA reflect both the long-run trend and any seasonal pattern captured in the selected specification. Compare the trajectory and interval width against the ETS forward forecasts in the prior section.</p>
 </section>
 </section>
-<section id="var-modelling" class="level1" data-number="6">
-<h1 data-number="6"><span class="header-section-number">6</span> VAR Modelling</h1>
+<section id="var-modelling" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> VAR Modelling</h1>
 <p>VAR (Vector Autoregression) jointly models all three variables as a system, allowing each variable’s forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that univariate ETS and ARIMA cannot.</p>
 <p>VAR requires <strong>stationary</strong> inputs. Because all three log series have unit roots (<code>d=1</code>), we work with first-differenced log series. An alternative cointegration framework (VECM) is beyond the scope of this project.</p>
-<section id="prepare-differenced-data" class="level2" data-number="6.1">
-<h2 data-number="6.1" class="anchored" data-anchor-id="prepare-differenced-data"><span class="header-section-number">6.1</span> Prepare Differenced Data</h2>
+<section id="prepare-differenced-data" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="prepare-differenced-data"><span class="header-section-number">7.1</span> Prepare Differenced Data</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1405,8 +1410,8 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </details>
 </div>
 </section>
-<section id="stationarity-check-on-differenced-series" class="level2" data-number="6.2">
-<h2 data-number="6.2" class="anchored" data-anchor-id="stationarity-check-on-differenced-series"><span class="header-section-number">6.2</span> Stationarity Check on Differenced Series</h2>
+<section id="stationarity-check-on-differenced-series" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="stationarity-check-on-differenced-series"><span class="header-section-number">7.2</span> Stationarity Check on Differenced Series</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -1440,8 +1445,8 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 <p><strong>Analysis:</strong> P-values well above 0.05 confirm the differenced series are stationary and appropriate as VAR inputs. If any series still fails, apply a second difference (<code>d=2</code>) to that variable only.</p>
 </section>
-<section id="acf-of-differenced-series" class="level2" data-number="6.3">
-<h2 data-number="6.3" class="anchored" data-anchor-id="acf-of-differenced-series"><span class="header-section-number">6.3</span> ACF of Differenced Series</h2>
+<section id="acf-of-differenced-series" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="acf-of-differenced-series"><span class="header-section-number">7.3</span> ACF of Differenced Series</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1467,8 +1472,8 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 <p><strong>Analysis:</strong> Remaining ACF structure in the differenced series — especially at seasonal lags 4 and 8 — informs how many lags <code>p</code> are needed in the VAR. Significant spikes at multiple lags suggest a higher-order VAR (p=2 or p=4) may be needed.</p>
 </section>
-<section id="var-lag-selection" class="level2" data-number="6.4">
-<h2 data-number="6.4" class="anchored" data-anchor-id="var-lag-selection"><span class="header-section-number">6.4</span> VAR Lag Selection</h2>
+<section id="var-lag-selection" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="var-lag-selection"><span class="header-section-number">7.4</span> VAR Lag Selection</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1498,8 +1503,8 @@ FPE(n)  1.607620e-13</code></pre>
 </div>
 <p><strong>Analysis:</strong> <code>VARselect</code> returns four information criteria (AIC, HQ, SC/BIC, FPE). SC (Schwarz/BIC) typically selects the most parsimonious lag; AIC selects the most flexible. Note the recommended lag from each criterion — the most common choice across criteria is a reasonable default. With quarterly data, <code>p=4</code> captures one full year of lags.</p>
 </section>
-<section id="fit-var-specifications-vars-package" class="level2" data-number="6.5">
-<h2 data-number="6.5" class="anchored" data-anchor-id="fit-var-specifications-vars-package"><span class="header-section-number">6.5</span> Fit VAR Specifications (vars package)</h2>
+<section id="fit-var-specifications-vars-package" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="fit-var-specifications-vars-package"><span class="header-section-number">7.5</span> Fit VAR Specifications (vars package)</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1593,10 +1598,10 @@ d_log_imports    0.8552   0.9047        1.0000</code></pre>
 </div>
 </div>
 </section>
-<section id="var-residual-diagnostics" class="level2" data-number="6.6">
-<h2 data-number="6.6" class="anchored" data-anchor-id="var-residual-diagnostics"><span class="header-section-number">6.6</span> VAR Residual Diagnostics</h2>
-<section id="portmanteau-serial-correlation-test" class="level3" data-number="6.6.1">
-<h3 data-number="6.6.1" class="anchored" data-anchor-id="portmanteau-serial-correlation-test"><span class="header-section-number">6.6.1</span> Portmanteau Serial Correlation Test</h3>
+<section id="var-residual-diagnostics" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="var-residual-diagnostics"><span class="header-section-number">7.6</span> VAR Residual Diagnostics</h2>
+<section id="portmanteau-serial-correlation-test" class="level3" data-number="7.6.1">
+<h3 data-number="7.6.1" class="anchored" data-anchor-id="portmanteau-serial-correlation-test"><span class="header-section-number">7.6.1</span> Portmanteau Serial Correlation Test</h3>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>--- VAR(1) Portmanteau Test ---</code></pre>
@@ -1631,8 +1636,8 @@ Chi-squared = 65.192, df = 54, p-value = 0.1415</code></pre>
 </div>
 <p><strong>Analysis:</strong> The Portmanteau test evaluates whether the VAR residuals are jointly white noise across all equations. A p-value &gt; 0.05 indicates no remaining serial correlation. If VAR(1) fails but VAR(2) or VAR(4) passes, the higher lag order is the appropriate choice.</p>
 </section>
-<section id="gg_tsresiduals-on-var-residuals" class="level3" data-number="6.6.2">
-<h3 data-number="6.6.2" class="anchored" data-anchor-id="gg_tsresiduals-on-var-residuals"><span class="header-section-number">6.6.2</span> gg_tsresiduals on VAR Residuals</h3>
+<section id="gg_tsresiduals-on-var-residuals" class="level3" data-number="7.6.2">
+<h3 data-number="7.6.2" class="anchored" data-anchor-id="gg_tsresiduals-on-var-residuals"><span class="header-section-number">7.6.2</span> gg_tsresiduals on VAR Residuals</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1659,8 +1664,8 @@ Chi-squared = 65.192, df = 54, p-value = 0.1415</code></pre>
 <p><strong>Analysis:</strong> These plots isolate each equation’s residuals. The 2020 Q2 spike will dominate the time plot. Check ACF panels for remaining structure — any systematic spike at lag 4 would suggest seasonal dynamics are not absorbed even with the differencing applied. The histogram should be roughly symmetric; heavy tails are expected due to the COVID outlier.</p>
 </section>
 </section>
-<section id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="level2" data-number="6.7">
-<h2 data-number="6.7" class="anchored" data-anchor-id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">6.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</h2>
+<section id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">7.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1730,8 +1735,8 @@ Chi-squared = 65.192, df = 54, p-value = 0.1415</code></pre>
 </div>
 </div>
 </section>
-<section id="var-forecast-on-test-set-differenced-log-scale" class="level2" data-number="6.8">
-<h2 data-number="6.8" class="anchored" data-anchor-id="var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">6.8</span> VAR Forecast on Test Set — Differenced Log Scale</h2>
+<section id="var-forecast-on-test-set-differenced-log-scale" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">7.8</span> VAR Forecast on Test Set — Differenced Log Scale</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -1789,8 +1794,8 @@ distributional 0.6.0.
 </div>
 <p><strong>Analysis:</strong> VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. Note whether the VAR’s cross-variable information (e.g., lagged GDP informing the imports equation) produces meaningfully different forecasts from the univariate ARIMA.</p>
 </section>
-<section id="var-forecast-on-test-set-back-transformed-to-levels" class="level2" data-number="6.9">
-<h2 data-number="6.9" class="anchored" data-anchor-id="var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">6.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</h2>
+<section id="var-forecast-on-test-set-back-transformed-to-levels" class="level2" data-number="7.9">
+<h2 data-number="7.9" class="anchored" data-anchor-id="var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">7.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1802,10 +1807,10 @@ distributional 0.6.0.
 </div>
 <p><strong>Analysis:</strong> Back-transformation via cumulative sum converts quarter-over-quarter log growth forecasts back to log level paths. This is more economically interpretable — the distance between the blue forecast line and the red actual points is the forecast error on the log level scale, approximately equal to the percentage error. Note whether errors accumulate over the 8-quarter horizon (a sign of drift in the differenced forecasts).</p>
 </section>
-<section id="var-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="6.10">
-<h2 data-number="6.10" class="anchored" data-anchor-id="var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">6.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
-<section id="differenced-log-scale" class="level3" data-number="6.10.1">
-<h3 data-number="6.10.1" class="anchored" data-anchor-id="differenced-log-scale"><span class="header-section-number">6.10.1</span> Differenced Log Scale</h3>
+<section id="var-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="7.10">
+<h2 data-number="7.10" class="anchored" data-anchor-id="var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">7.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
+<section id="differenced-log-scale" class="level3" data-number="7.10.1">
+<h3 data-number="7.10.1" class="anchored" data-anchor-id="differenced-log-scale"><span class="header-section-number">7.10.1</span> Differenced Log Scale</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1816,8 +1821,8 @@ distributional 0.6.0.
 </div>
 </div>
 </section>
-<section id="back-transformed-to-log-levels" class="level3" data-number="6.10.2">
-<h3 data-number="6.10.2" class="anchored" data-anchor-id="back-transformed-to-log-levels"><span class="header-section-number">6.10.2</span> Back-Transformed to Log Levels</h3>
+<section id="back-transformed-to-log-levels" class="level3" data-number="7.10.2">
+<h3 data-number="7.10.2" class="anchored" data-anchor-id="back-transformed-to-log-levels"><span class="header-section-number">7.10.2</span> Back-Transformed to Log Levels</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1831,10 +1836,10 @@ distributional 0.6.0.
 </section>
 </section>
 </section>
-<section id="model-comparison-and-selection" class="level1" data-number="7">
-<h1 data-number="7"><span class="header-section-number">7</span> Model Comparison and Selection</h1>
-<section id="unified-accuracy-table-best-models-across-all-methods" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">7.1</span> Unified Accuracy Table: Best Models Across All Methods</h2>
+<section id="model-comparison-and-selection" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Model Comparison and Selection</h1>
+<section id="unified-accuracy-table-best-models-across-all-methods" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">8.1</span> Unified Accuracy Table: Best Models Across All Methods</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -1946,8 +1951,8 @@ distributional 0.6.0.
 <p><strong>Note:</strong> VAR accuracy is measured on the differenced log scale while ETS and ARIMA are on the log level scale — RMSE values are not directly comparable across methods. Within each variable, compare ETS vs ARIMA (same scale). The VAR comparison is informative for understanding the differenced growth forecast quality separately.</p>
 <p><strong>Analysis:</strong> For each variable, identify which method achieves the lowest RMSE and lowest MAPE on the test set. If ETS wins on one criterion and ARIMA on another, both can be retained as “well-fitting” models for the final forward forecast. The VAR’s value is in capturing joint dynamics across variables rather than minimising univariate forecast error.</p>
 </section>
-<section id="final-model-selection-summary" class="level2" data-number="7.2">
-<h2 data-number="7.2" class="anchored" data-anchor-id="final-model-selection-summary"><span class="header-section-number">7.2</span> Final Model Selection Summary</h2>
+<section id="final-model-selection-summary" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="final-model-selection-summary"><span class="header-section-number">8.2</span> Final Model Selection Summary</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 25%">
@@ -1987,8 +1992,8 @@ distributional 0.6.0.
 <p><strong>Note:</strong> Fill in this table after rendering based on your AICc tables and the accuracy table above.</p>
 </section>
 </section>
-<section id="conclusion" class="level1" data-number="8">
-<h1 data-number="8"><span class="header-section-number">8</span> Conclusion</h1>
+<section id="conclusion" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Conclusion</h1>
 <p><strong>Summary of Findings:</strong></p>
 <p>All three US national accounts series — GDP, domestic demand, and imports — exhibit strong upward trends with stable quarterly seasonality and remainder variance dominated by two structural breaks: the 2008–09 Global Financial Crisis and the 2020 Q2 COVID-19 collapse. The log transformation effectively stabilises variance, and first-differencing achieves stationarity as confirmed by KPSS tests.</p>
 <p><strong>ETS</strong> models capture the trend-seasonal structure well. The auto-selected specification will likely be an AAN or AAA model. The primary limitation is that ETS treats the COVID outlier as a one-period shock and reverts to trend quickly — this can produce overconfident forecasts if the post-COVID recovery trajectory differs from pre-pandemic trend.</p>
