@@ -446,25 +446,25 @@ fc_ets_imp %>%
 
 ## ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)
 
-Models are refit on the **full dataset** before extrapolating forward.
+Models are now forecasting into the future based on their performance of the test data.
 
 ```{r ets-final-forecast}
 #| echo: false
 #| fig-height: 4
 
 ets_gdp_final <- us_clean %>% model(best_ets = ETS(log_gdp))
-ets_dd_final  <- us_clean %>% model(best_ets = ETS(log_domestic_demand))
-ets_imp_final <- us_clean %>% model(best_ets = ETS(log_imports))
+ets_dd_final  <- us_clean %>% model(best_ets = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")))
+ets_imp_final <- us_clean %>% model(best_ets = ETS(log_imports ~ error("A") + trend("A")  + season("N")))
 
 fc_ets_gdp_final <- ets_gdp_final %>% forecast(h = 8)
-fc_ets_dd_final  <- ets_dd_final  %>% forecast(h = 8)
+fc_ets_dd_final <- ets_dd_final  %>% forecast(h = 8)
 fc_ets_imp_final <- ets_imp_final %>% forecast(h = 8)
 
 fc_ets_gdp_final %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ETS Forecast: Log GDP (2026 Q1 – 2027 Q4)",
-       subtitle = "Refit on full data; 80% and 95% prediction intervals",
+       subtitle = "Auto-Selected R Model; 80% and 95% prediction intervals",
        x = NULL, y = "Log GDP") +
   theme_bw()
 
@@ -472,7 +472,7 @@ fc_ets_dd_final %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ETS Forecast: Log Domestic Demand (2026 Q1 – 2027 Q4)",
-       subtitle = "Refit on full data; 80% and 95% prediction intervals",
+       subtitle = "ETS(A,A,N); 80% and 95% prediction intervals",
        x = NULL, y = "Log Domestic Demand") +
   theme_bw()
 
@@ -480,16 +480,16 @@ fc_ets_imp_final %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ETS Forecast: Log Imports (2026 Q1 – 2027 Q4)",
-       subtitle = "Refit on full data; 80% and 95% prediction intervals",
+       subtitle = "ETS(A,A,N); 80% and 95% prediction intervals",
        x = NULL, y = "Log Imports") +
   theme_bw()
 ```
 
-**Analysis:** Forward forecasts reflect the trend and seasonal structure estimated over the full 2000–2025 period. Prediction intervals widen as the horizon extends. The damped trend variant (if selected) will produce more conservative long-run projections than a linear trend model.
+**Analysis:** The above plots have taken the best ETS model based on performance on the test data, and forecasted the long values for each variable 9 quarters into the future. Prediction intervals widen the longer out we go due to unforeseeable shocks. Every model when looking at the confidence intervals and steepness of the forecast lines looks pretty consistent with the data as a whole, so Crawford and I are quite happy with these forecasts.
 
 # ARIMA Modelling
 
-ARIMA models use lagged values and lagged errors to capture autocorrelation structure after differencing to achieve stationarity. The differencing order `d` is determined by unit root tests; seasonal differencing `D` is evaluated via AICc.
+ARIMA models use lagged values and lagged errors to capture autocorrelation structure after differencing to achieve stationarity. The differencing order of "d" is determined by unit root tests; seasonal differencing of "D" is evaluated by comparing AICc values.
 
 ## Unit Root Tests and Differencing Diagnostics
 
@@ -499,31 +499,35 @@ ARIMA models use lagged values and lagged errors to capture autocorrelation stru
 #| echo: false
 #| fig-height: 3
 
-
 us_train %>% ACF(log_gdp,             lag_max = 20) %>% autoplot() +
   labs(title = "ACF: Log GDP (Levels)") + theme_bw()
 us_train %>% ACF(log_domestic_demand, lag_max = 20) %>% autoplot() +
   labs(title = "ACF: Log Domestic Demand (Levels)") + theme_bw()
 us_train %>% ACF(log_imports,         lag_max = 20) %>% autoplot() +
   labs(title = "ACF: Log Imports (Levels)") + theme_bw()
-
-
-
 ```
 
-**Analysis:** A slow, linear decay in the ACF is the hallmark of a non-stationary (unit root) process. All three series should show this pattern — confirming that `d ≥ 1` is needed before fitting ARIMA.
+**Analysis:** A slow, linear decay in the ACF is the most obvious sign that the data needs to be transformed. The data is clearly non-stationary, especially since we saw at the very beginning a strong positive trend.
 
 ### KPSS Tests and Recommended Differencing Order
+
+KPSS tests being used below are another way we will be confirming whether our data is stationary for ARIMA use (as it's required). KPSS tests assume a null hypothesis that the data is stationary and that no unit roots are present. We will again use a 0.05 threshold to determine if this criteria is met.
 
 ```{r arima-unitroot}
 #| echo: false
 
-# ── Table 1: KPSS Unit Root Test
+# AI was used here to generate the code for both the KPSS stationarity/unit roots test, performing a unit root test to determine the differencing required, and visualize the results in a clean table!
+
+# KPSS resource used: https://www.statisticshowto.com/kpss-test/
+# Unit Roots + Difference resource used:
+# https://www.rdocumentation.org/packages/feasts/versions/0.5.0/topics/unitroot_ndiffs
+
+# Table 1: KPSS Unit Root Test
 bind_rows(
-  us_train %>% features(log_gdp,             unitroot_kpss) %>% mutate(variable = "Log GDP"),
+  us_train %>% features(log_gdp, unitroot_kpss) %>% mutate(variable = "Log GDP"),
   us_train %>% features(log_domestic_demand, unitroot_kpss) %>% mutate(variable = "Log Domestic Demand"),
-  us_train %>% features(log_imports,         unitroot_kpss) %>% mutate(variable = "Log Imports")
-) %>% 
+  us_train %>% features(log_imports, unitroot_kpss) %>% mutate(variable = "Log Imports")) %>% 
+  
   dplyr::select(variable, kpss_stat, kpss_pvalue) %>%
   knitr::kable(
     format  = "html",
@@ -545,11 +549,11 @@ bind_rows(
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e", width = "12em") %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c")
 
-# ── Table 2: Recommended Differencing Order
+# Table 2: Recommended Differencing Order
 bind_rows(
-  us_train %>% features(log_gdp,             unitroot_ndiffs) %>% mutate(variable = "Log GDP"),
+  us_train %>% features(log_gdp, unitroot_ndiffs) %>% mutate(variable = "Log GDP"),
   us_train %>% features(log_domestic_demand, unitroot_ndiffs) %>% mutate(variable = "Log Domestic Demand"),
-  us_train %>% features(log_imports,         unitroot_ndiffs) %>% mutate(variable = "Log Imports")
+  us_train %>% features(log_imports, unitroot_ndiffs) %>% mutate(variable = "Log Imports")
 ) %>% 
   dplyr::select(variable, ndiffs) %>%
   knitr::kable(
@@ -573,11 +577,11 @@ bind_rows(
   kableExtra::column_spec(2, color = "#2c2c2c")
 ```
 
-**Analysis:** KPSS null is stationarity — a small p-value (\< 0.05) rejects stationarity and confirms differencing is needed. `ndiffs` will typically return 1 for all three series given the strong upward trends observed.
+**Analysis:** From the KPSS table generated by R, every p-value for each of our logged variables is one, so not only do we reject the null hypothesis, but this confirms we must difference the data and test if the variables are stationary afterward. Moving to the unit root test table and differencing required, the table indicates we need to differentiate each logged variable once to have stationary data.
 
 ### ACF and PACF of First-Differenced Series
 
-After applying `d=1`, the ACF and PACF of the differenced series reveal the AR and MA orders.
+After applying one difference, the ACF and PACF of the differenced series reveal the AR and MA orders.
 
 ```{r arima-acf-pacf-diff}
 #| echo: false
@@ -602,13 +606,11 @@ us_train %>%
   labs(title = "First-Differenced Log Imports: Time Plot, ACF, PACF") + theme_bw()
 ```
 
-**Analysis:** After first-differencing, the series should be approximately stationary. Read the ACF and PACF to inform manual model specs: - **ACF cuts off at lag q, PACF decays** → MA(q) process - **PACF cuts off at lag p, ACF decays** → AR(p) process - **Both decay** → ARMA(p,q) - **Spikes at seasonal lags (4, 8, 12)** → seasonal terms needed
-
-Check whether ACF at lag 4 is significant — if so, a seasonal MA term `PDQ(0,1,1)` is warranted.
+**Analysis:** After first differencing, gg_tsdisplay plots indicate that our data is now stationary. The ACF plots of every differnced log variable have no values crossing the 95% boundary, and the PACF plots have no values that indicate an AR process needed. As such, we can now go forward, layout some ARIMA models, fit them to the test and training data, compare results, then forecast into the future.
 
 ## Fit ARIMA Specifications
 
-Based on the ACF/PACF diagnostics above, three manual specifications are fit alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality.
+Based on the ACF/PACF diagnostics above, three manual specifications are fit alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality. The variety of models is to make sure that, in case some data wasn't picked, we are covering our bases.
 
 ```{r arima-fit}
 #| echo: true
@@ -619,7 +621,6 @@ arima_fit_gdp <- us_train %>%
   model(
     auto_arima  = ARIMA(log_gdp),
     arima_011   = ARIMA(log_gdp ~ 1 + pdq(0,1,1) + PDQ(0,0,0)),
-    arima_111   = ARIMA(log_gdp ~ 1 + pdq(1,1,1) + PDQ(0,0,0)),
     arima_011s  = ARIMA(log_gdp ~ 1 + pdq(0,1,1) + PDQ(0,1,1)),
     arima_111s  = ARIMA(log_gdp ~ 1 + pdq(1,1,1) + PDQ(1,1,0))
   )
@@ -726,9 +727,7 @@ glance(arima_fit_imp) %>%
   kableExtra::row_spec(1, background = "#fffde7")
 ```
 
-**Analysis:** Note which model wins on AICc vs BIC — BIC penalises parameters more heavily so it tends to select simpler specifications. If the auto model wins, check what orders it selected via `report()`. Seasonal specs winning over non-seasonal ones would confirm the STL seasonal component is large enough to matter for ARIMA.
-
-## Auto-ARIMA Model Report
+**Analysis:** After laying out the different ARIMA model specifications, and then applying them to the US training data, we now have the results to see what models have fitted well. In every table, the lowest AICc model has been highlighted in yellow, which is R's auto-selected model for each.
 
 ```{r arima-report}
 #| echo: false
@@ -737,6 +736,18 @@ arima_fit_gdp %>% dplyr::select(auto_arima) %>% report()
 arima_fit_dd  %>% dplyr::select(auto_arima) %>% report()
 arima_fit_imp %>% dplyr::select(auto_arima) %>% report()
 ```
+
+Using the report function, we get the following **ARIMA specifications for log_gdp, log_dd, and log_imp respectively: ARIMA(0,1,1), ARIMA(0,1,0), and ARIMA(0,1,0)**. Like before, the domestic demand and import variables share the same specifications like the ETS analysis.
+
+For all the logged variables with one difference, here the the specifications for each (GDP, DD, IMP):
+
+ARIMA(0,1,1) –\> AR(0), 1 difference, MA(1)
+
+ARIMA(0,1,0) –\> AR(0), 1 difference, MA(0)
+
+ARIMA(0,1,0) –\> AR(0), 1 difference, MA(0)
+
+# Auto-ARIMA Model Report
 
 ## ARIMA Residual Diagnostics
 
@@ -757,7 +768,7 @@ arima_fit_imp %>% dplyr::select(auto_arima) %>%
   labs(title = "ARIMA Residual Diagnostics: Log Imports") + theme_bw()
 ```
 
-**Analysis:** The 2020 Q2 COVID spike will dominate the residual time plot for all three variables. This is a structural break that differencing and ARIMA orders cannot absorb — it inflates residual variance and may push ACF spikes into significance at nearby lags. If ACF structure is primarily confined to the COVID period, the white-noise assumption is approximately satisfied for the rest of the sample. A formal outlier correction (intervention variable) is beyond the current scope.
+**Analysis:** The 2020 COVID spike again shows up most prominently in the time plot, but all other plots are what we want for a stationary time series. The ACF plots of every auto-selected ARIMA model (by R) show no ACF values crossing the 95% boundary, and a normal distribution histogram of the values as well, indicating stationary time series data.
 
 ## Ljung-Box Test on ARIMA Residuals
 
@@ -793,6 +804,8 @@ ljung_box_results %>%
   column_spec(1, bold = TRUE) %>%
   column_spec(3, color = ifelse(ljung_box_results$lb_pvalue < 0.05, "red", "black"))
 ```
+
+**Analysis:** In all of our Ljung-Box tests for the first difference logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9396, 0.8730, and 0.4611 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation and that we can proceed with ARIMA model analysis.
 
 ## ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)
 
@@ -830,9 +843,10 @@ arima_accuracy %>%
   column_spec(1:2, bold = TRUE) %>%
   column_spec(3, color = ifelse(
     arima_accuracy$RMSE == ave(arima_accuracy$RMSE, arima_accuracy$variable, FUN = min),
-    "blue", "black"
-  ))
+    "blue", "black"))
 ```
+
+Now we take all our ARIMA models after apply to training data, and applying them to the test data to determine what specifications will be best for forecasting future values. With the r code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For differenced log domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
 
 ```{r arima-forecast-plots}
 #| echo: false
@@ -857,7 +871,7 @@ fc_arima_dd %>%
   theme_bw()
 
 fc_arima_imp %>%
-  filter(.model == "auto_arima") %>%
+  filter(.model == "arima_011") %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ARIMA Auto Forecast: Log Imports (2024–2025)",
@@ -866,7 +880,7 @@ fc_arima_imp %>%
   theme_bw()
 ```
 
-**Analysis:** Compare ARIMA forecast accuracy to ETS from the prior section. ARIMA typically handles short-run autocorrelation structure better, while ETS handles trends more smoothly. Imports is the most challenging — higher remainder variance from the STL decomposition translates into wider prediction intervals and higher RMSE.
+**Analysis:** Above is the forecasts of the ARIMA models on the test data, and we see the results of our best performing ARIMA models for each variable in the plots above. In each of the forecasts, the 95% and 80% confidence intervals all contain the real data, and the ARIMA model forecasts. Each forecast is close to the actual data, so our ARIMA specifications have worked quite well. Like the previous ETS modeling on the test data with logged imports, the spike in the test data is barely contained in the 80% confidence interval.
 
 ## ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)
 
@@ -876,7 +890,7 @@ fc_arima_imp %>%
 
 arima_gdp_final <- us_clean %>% model(best_arima = ARIMA(log_gdp))
 arima_dd_final  <- us_clean %>% model(best_arima = ARIMA(log_domestic_demand))
-arima_imp_final <- us_clean %>% model(best_arima = ARIMA(log_imports))
+arima_imp_final <- us_clean %>% model(best_arima = ARIMA(log_imports ~ 1 + pdq(0,1,1) + PDQ(0,0,0)))
 
 fc_arima_gdp_final <- arima_gdp_final %>% forecast(h = 8)
 fc_arima_dd_final  <- arima_dd_final  %>% forecast(h = 8)
@@ -886,7 +900,7 @@ fc_arima_gdp_final %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ARIMA Forecast: Log GDP (2026 Q1 – 2027 Q4)",
-       subtitle = "Refit on full data; 80% and 95% prediction intervals",
+       subtitle = "Auto-Selected R Model; 80% and 95% prediction intervals",
        x = NULL, y = "Log GDP") +
   theme_bw()
 
@@ -894,7 +908,7 @@ fc_arima_dd_final %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ARIMA Forecast: Log Domestic Demand (2026 Q1 – 2027 Q4)",
-       subtitle = "Refit on full data; 80% and 95% prediction intervals",
+       subtitle = "Auto-Selected R Model; 80% and 95% prediction intervals",
        x = NULL, y = "Log Domestic Demand") +
   theme_bw()
 
@@ -902,18 +916,18 @@ fc_arima_imp_final %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ARIMA Forecast: Log Imports (2026 Q1 – 2027 Q4)",
-       subtitle = "Refit on full data; 80% and 95% prediction intervals",
+       subtitle = "ARIMA(0,1,1); 80% and 95% prediction intervals",
        x = NULL, y = "Log Imports") +
   theme_bw()
 ```
 
-**Analysis:** Forward forecasts from the full-data ARIMA reflect both the long-run trend and any seasonal pattern captured in the selected specification. Compare the trajectory and interval width against the ETS forward forecasts in the prior section.
+**Analysis:** All of these forecasts for future values use the best specification that performed well on the test data, which in this case is R's auto-selected ARIMA for GDP and domestic demand, and ARIMA(0,1,1) for improts. So far, these ARIMA model forecasts look very similar to the ETS forecasts, including the logged import forecast values.
 
 # VAR Modelling
 
 VAR (Vector Autoregression) jointly models all three variables as a system, allowing each variable's forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that univariate ETS and ARIMA cannot.
 
-VAR requires **stationary** inputs. Because all three log series have unit roots (`d=1`), we work with first-differenced log series. An alternative cointegration framework (VECM) is beyond the scope of this project.
+VAR requires **stationary** inputs. Because all three log series have unit roots (difference = 1), we work with first-differenced log series.
 
 ## Prepare Differenced Data
 
@@ -943,6 +957,8 @@ train_mat <- us_train_diff %>%
 ```{r var-stationarity}
 #| echo: false
 
+# AI helping to create the unit root KPSS test and visualize results in a nice table
+
 bind_rows(
   us_train_diff %>% features(d_log_gdp, unitroot_kpss) %>% mutate(variable = "Δ Log GDP"),
   us_train_diff %>% features(d_log_dd, unitroot_kpss) %>% mutate(variable = "Δ Log DD"),
@@ -970,7 +986,7 @@ bind_rows(
   kableExtra::column_spec(2:3, color = "#2c2c2c")
 ```
 
-**Analysis:** P-values well above 0.05 confirm the differenced series are stationary and appropriate as VAR inputs. If any series still fails, apply a second difference (`d=2`) to that variable only.
+**Analysis:** All our p-values are P-values are well above 0.05, so we fail to reject the null hypothesis that our data is stationary. We do not need a second difference according to the KPSS and p-value, so we can proceed on analysis.
 
 ## ACF of Differenced Series
 
@@ -978,47 +994,63 @@ bind_rows(
 #| echo: false
 #| fig-height: 3
 
-us_train_diff %>% ACF(d_log_gdp,     lag_max = 16) %>% autoplot() +
+us_train_diff %>% ACF(d_log_gdp, lag_max = 16) %>% autoplot() +
   labs(title = "ACF: Δ Log GDP") + theme_bw()
-us_train_diff %>% ACF(d_log_dd,      lag_max = 16) %>% autoplot() +
+us_train_diff %>% ACF(d_log_dd, lag_max = 16) %>% autoplot() +
   labs(title = "ACF: Δ Log Domestic Demand") + theme_bw()
 us_train_diff %>% ACF(d_log_imports, lag_max = 16) %>% autoplot() +
   labs(title = "ACF: Δ Log Imports") + theme_bw()
 ```
 
-**Analysis:** Remaining ACF structure in the differenced series — especially at seasonal lags 4 and 8 — informs how many lags `p` are needed in the VAR. Significant spikes at multiple lags suggest a higher-order VAR (p=2 or p=4) may be needed.
+**Analysis:** Setting the lag amount to 16 and generating an ACF plot for each variable, we see that the differenced and logged variables have no ACF values cross the 95% boundary. This is again a confirmation that our data is stationary, and that we may proceed on analysis.
 
 ## VAR Lag Selection
 
+In this code chunk, R is performing a VAR lag selection for a multivariate time series, fitting lags with lengths 1 to 6, including a constant term, and through AIC, HQ, SC, and FPE, deciding what the best lag would be under each model.
+
 ```{r var-lag-select}
 #| echo: true
+
+# AI here helping to code, and give insight to how we as a group can interpret the results
 
 lag_select <- VARselect(train_mat, lag.max = 6, type = "const")
 lag_select$criteria
 lag_select$selection
 ```
 
-**Analysis:** `VARselect` returns four information criteria (AIC, HQ, SC/BIC, FPE). SC (Schwarz/BIC) typically selects the most parsimonious lag; AIC selects the most flexible. Note the recommended lag from each criterion — the most common choice across criteria is a reasonable default. With quarterly data, `p=4` captures one full year of lags.
+**Analysis:** AIC and FPE are the most flexible according to AI, however since our goal is to forecast and AIC is the most familiar to us, we will be using 2 lags in our specifications. The other methods, HQ and SC, are more punative like BIC in order to create more stable models.
+
+**Note by AI:** The recommended lag from each criterion — the most common choice across criteria is a reasonable default. With quarterly data, `p=4` captures one full year of lags.
 
 ## Fit VAR Specifications (vars package)
+
+Below, using the vars package, we can observe the specifications using different lags from the previous code chunk's table. For our purposes, we are looking at the VAR of the training data with the model, with lag 2.
 
 ```{r var-fit-vars}
 #| echo: true
 
-var_p1 <- VAR(train_mat, p = 1, type = "const")
+# AI was used to help code in VAR specifications
+
+var_p1 <- VAR(train_mat, p = 2, type = "const")
 var_p2 <- VAR(train_mat, p = 2, type = "const")
-var_p4 <- VAR(train_mat, p = 4, type = "const")
+var_p4 <- VAR(train_mat, p = 2, type = "const")
 
 # Summary of recommended lag order (adjust based on VARselect above)
-summary(var_p1)
+summary(var_p2)
 ```
+
+**Crawford verify this interpretation:** The VAR(2) model is dynamically stable with all characteristic roots below 1.0. In the GDP and domestic demand equations, lags are significantly negative, lagged domestic demand positively predicts GDP, and the constants are highly significant at \~0.69% and \~0.68% quarterly growth respectively. The imports equation is weakest with no lag being significant and the joint F-test fails (p = 0.147), suggesting imports behave as exogenous to the system. Most notably, residual correlations are extremely high (0.985 between GDP and domestic demand, 0.86–0.91 with imports), indicating the three variables are driven by a common trend.
 
 ## VAR Residual Diagnostics
 
-### Portmanteau Serial Correlation Test
+### Portmanteau Serial Correlation Test (Broader version of Box-Pierce and Ljung-Box Tests)
+
+Portmanteau Serial Correlation Test is a broader version of the Box-Pierce and Ljung-Box Test, testing for stationary data series. The null hypothesis is that the data has no series correlation (no autocorrelation), and that there is no data remaining in the errors to be extracted.
 
 ```{r var-serial-test}
 #| echo: false
+
+# AI was used to help code in the serial tests below
 
 cat("--- VAR(1) Portmanteau Test ---\n")
 serial.test(var_p1, lags.pt = 10, type = "PT.asymptotic")
@@ -1030,7 +1062,7 @@ cat("--- VAR(4) Portmanteau Test ---\n")
 serial.test(var_p4, lags.pt = 10, type = "PT.asymptotic")
 ```
 
-**Analysis:** The Portmanteau test evaluates whether the VAR residuals are jointly white noise across all equations. A p-value \> 0.05 indicates no remaining serial correlation. If VAR(1) fails but VAR(2) or VAR(4) passes, the higher lag order is the appropriate choice.
+**Analysis:** The Portmanteau test evaluates whether the VAR residuals are jointly white noise across all equations. A p-value \> 0.05 indicates no remaining serial correlation. Based on the results of the Portmanteau Test a lag of 1 failed the test having a p-value of 0.01245 which is less than 0.05, so we reject the null hypothesis. For lags of 2 and 4, both p-values of 0.07689 and 0.1415 are greater than 0.05. This means our data has no remaining serial correlation, and we can continue our analysis.
 
 ### gg_tsresiduals on VAR Residuals
 
@@ -1061,13 +1093,15 @@ resid_tsibble %>%
   labs(title = "VAR(1) Residual Diagnostics: Δ Log Imports") + theme_bw()
 ```
 
-**Analysis:** These plots isolate each equation's residuals. The 2020 Q2 spike will dominate the time plot. Check ACF panels for remaining structure — any systematic spike at lag 4 would suggest seasonal dynamics are not absorbed even with the differencing applied. The histogram should be roughly symmetric; heavy tails are expected due to the COVID outlier.
+**Analysis:** These plots isolate each equation's variable residuals. Again, like previous gg_tsresiduals plots our time series data clearly shows the COVID-19 shock but our data continues hovering around the mean of 0. All ACF plots for every variable have ACF values within the 95% boundary, so no autocorrelation to remove. The distribution of residuals is also normal, with clear outliers most likely from the COVID pandemic data.
 
 ## Fit VAR via fable (for AICc/BIC and forecast pipeline)
 
 ```{r var-fable-fit}
 #| echo: true
 #| warning: false
+
+# AI used to help code in the AICc/BIC testing of the VAR
 
 # Unkey the tsibble for fable VAR (requires single index, no key)
 us_train_diff_unkeyed <- us_train_diff %>%
@@ -1101,11 +1135,15 @@ glance(fit_var) %>%
   kableExtra::column_spec(2:ncol(glance(fit_var)), color = "#2c2c2c")
 ```
 
+**Analysis:** With the var_aicc and var_bic models, both share the exact same log_lik, AIC, AICc, and BIC values. Both the AICc and BIC values are extremely small and negative, so we should be good with the var specifications we have established such as the lag of 2.
+
 ## VAR Forecast on Test Set — Differenced Log Scale
 
 ```{r var-forecast-test-diff}
 #| echo: false
 #| fig-height: 4
+
+# AI used in helping to make the graphs and forecast here
 
 us_clean_diff_unkeyed <- us_clean_diff %>%
   as_tibble() %>%
@@ -1130,7 +1168,7 @@ fc_var_test %>%
   theme_bw()
 ```
 
-**Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. Note whether the VAR's cross-variable information (e.g., lagged GDP informing the imports equation) produces meaningfully different forecasts from the univariate ARIMA.
+**Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that's a good sign. Unlike the ETS and ARIMA analysis previosly, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph an values fluctuate more than the GDP and domestic demand values.
 
 ## VAR Forecast on Test Set — Back-Transformed to Levels
 
@@ -1217,7 +1255,7 @@ var_levels_tbl %>%
   theme_bw()
 ```
 
-**Analysis:** Back-transformation via cumulative sum converts quarter-over-quarter log growth forecasts back to log level paths. This is more economically interpretable — the distance between the blue forecast line and the red actual points is the forecast error on the log level scale, approximately equal to the percentage error. Note whether errors accumulate over the 8-quarter horizon (a sign of drift in the differenced forecasts).
+**Analysis:** Back-transformation via cumulative sum converts quarter-over-quarter log growth forecasts back to log level values. This is more economically interpretable as the distance between the blue forecast line and the red actual points is the forecast error on the log level scale. This forecast error on the log level scale is approximately equal to the percentage error. Like the previous code chunk with a differenced log scale, the GDP and domestic demand forecasts (dark cyan lines) do quite well fitting the test data, but the logged imports forecast continues to have a big error in fitting the data.
 
 ## VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)
 
@@ -1247,6 +1285,8 @@ fc_var_final %>%
        x = NULL, y = "First Difference of Log Value") +
   theme_bw()
 ```
+
+The VAR(2) model forecasts all three series of US GDP, domestic demand, and imports going to near-zero first-difference log growth through 2027 Q4, which in levels translates to **slow but stable positive growth**. The lag 2 structure which should have been implamented means the model is capturing up to two quarters of backward momentum. The imports panel has the widest prediction interval due to trade being highly volatile relative to GDP during demand shocks.
 
 ### Back-Transformed to Log Levels
 
