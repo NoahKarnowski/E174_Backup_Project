@@ -167,13 +167,15 @@ us_clean %>%
 
 **Analysis:** All three series share the same decomposition pattern of a clear positive trend, consistent seasonal patterns, and a remainder that hovers around 0 (the mean) until the COVID-19 pandemic. The seasonal component is highly consistent across time, so additive instead of multiplicative seasonality should be present in our ETS models. When we use R and other tests to pick the best ETS decomposition, we will know for sure what specifications are needed.
 
-# Train / Test Split
+# Training and Testing Split
+
+As the chunk title implies, we are setting out training data period, 2000 Q1 to 2023 Q4, and our test data period, 2024 Q1 to 2025 Q4.
 
 ```{r train-test}
 #| echo: true
 
-# Training: 2000 Q1 – 2023 Q4  →  96 quarters
-# Test:     2024 Q1 – 2025 Q4  →   8 quarters
+# Training: 2000 Q1 – 2023 Q4  =  96 quarters
+# Test:     2024 Q1 – 2025 Q4  =   8 quarters
 us_train <- us_clean %>% filter(date <= yearquarter("2023 Q4"))
 us_test  <- us_clean %>% filter(date >= yearquarter("2024 Q1"))
 
@@ -183,11 +185,11 @@ cat("Test observations:    ", nrow(us_test),  "\n")
 
 # ETS Modelling
 
-ETS (Error–Trend–Seasonal) models are state-space models that decompose a series into three exponentially smoothed components. Because all series are log-transformed, additive ETS on the log scale is equivalent to multiplicative ETS on the original scale.
+ETS (Error, Trend, and Seasonal) models decompose a series into three exponentially smoothed components. Since all series are log-transformed, additive ETS on the log scale here is equivalent to multiplicative ETS on the original scale.
 
 ## Fit Multiple ETS Specifications
 
-Five specifications are fit per variable: an automatically selected model, two damped/undamped additive variants, and one full additive seasonal model. Residuals are checked *before* using the models for forecasting to confirm white-noise assumptions.
+Five specifications are fit per variable: an automatically selected model, two damped/undamped additive variants, and one full additive seasonal model. Residuals are being checked before using the models for forecasting to confirm the data has white-noise for the remainders.
 
 ```{r ets-fit}
 #| echo: true
@@ -200,18 +202,13 @@ ets_fit_gdp <- us_train %>%
     ets_AAN  = ETS(log_gdp ~ error("A") + trend("A")  + season("N")),
     ets_AAdN = ETS(log_gdp ~ error("A") + trend("Ad") + season("N")),
     ets_AAA  = ETS(log_gdp ~ error("A") + trend("A")  + season("A")),
-    ets_AAdA = ETS(log_gdp ~ error("A") + trend("Ad") + season("A"))
-  )
+    ets_AAdA = ETS(log_gdp ~ error("A") + trend("Ad") + season("A")))
 
 # Domestic Demand
 ets_fit_dd <- us_train %>%
   model(
     auto_ets = ETS(log_domestic_demand),
-    ets_AAN  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")),
-    ets_AAdN = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("N")),
-    ets_AAA  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("A")),
-    ets_AAdA = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("A"))
-  )
+    ets_AAN  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")), ets_AAdN = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("N")), ets_AAA  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("A")), ets_AAdA = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("A")))
 
 # Imports
 ets_fit_imp <- us_train %>%
@@ -220,8 +217,7 @@ ets_fit_imp <- us_train %>%
     ets_AAN  = ETS(log_imports ~ error("A") + trend("A")  + season("N")),
     ets_AAdN = ETS(log_imports ~ error("A") + trend("Ad") + season("N")),
     ets_AAA  = ETS(log_imports ~ error("A") + trend("A")  + season("A")),
-    ets_AAdA = ETS(log_imports ~ error("A") + trend("Ad") + season("A"))
-  )
+    ets_AAdA = ETS(log_imports ~ error("A") + trend("Ad") + season("A")))
 ```
 
 ## ETS Model Comparison: AICc and BIC
@@ -229,27 +225,79 @@ ets_fit_imp <- us_train %>%
 ```{r ets-ic}
 #| echo: false
 
+# For ETS of GDP
+# AI assisted code to make clearly visible results (like future chunks!)
 glance(ets_fit_gdp) %>%
   dplyr::select(.model, AICc, BIC) %>%
   arrange(AICc) %>%
-  knitr::kable(caption = "ETS Information Criteria: Log GDP", digits = 2)
+  knitr::kable(
+    caption = "ETS for Logged GDP",
+    digits = 2,
+    col.names = c("Model", "AICc", "BIC"),
+    align = c("l", "r", "r")
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "bordered"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  kableExtra::row_spec(1, bold = TRUE, background = "#d4edda")
 
+# For ETS of domestic demand
+# AI assisted code to make clearly visible results (like future chunks!)
 glance(ets_fit_dd) %>%
   dplyr::select(.model, AICc, BIC) %>%
   arrange(AICc) %>%
-  knitr::kable(caption = "ETS Information Criteria: Log Domestic Demand", digits = 2)
+  knitr::kable(
+    caption = "ETS for Logged Domestic Demand",
+    digits = 2,
+    col.names = c("Model", "AICc", "BIC"),
+    align = c("l", "r", "r")
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "bordered"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  kableExtra::row_spec(1, bold = TRUE, background = "#d4edda")
 
+# For ETS of imports
+# AI assisted code to make clearly visible results (like future chunks!)
 glance(ets_fit_imp) %>%
   dplyr::select(.model, AICc, BIC) %>%
   arrange(AICc) %>%
-  knitr::kable(caption = "ETS Information Criteria: Log Imports", digits = 2)
+  knitr::kable(
+    caption = "ETS for Logged Imports",
+    digits = 2,
+    col.names = c("Model", "AICc", "BIC"),
+    align = c("l", "r", "r")
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = c("striped", "hover", "bordered"),
+    full_width = FALSE,
+    position = "center"
+  ) %>%
+  kableExtra::row_spec(1, bold = TRUE, background = "#d4edda")
+
+# To see the best ETS model sepcifications
+ets_fit_gdp %>%
+  dplyr::select(auto_ets, .model_desc = 2) %>%
+  print()
+
+ets_fit_dd %>%
+  dplyr::select(auto_ets, .model_desc = 2) %>%
+  print()
+
+ets_fit_imp %>%
+  dplyr::select(auto_ets, .model_desc = 2) %>%
+  print()
 ```
 
-**Analysis:** Lower AICc indicates a better penalised likelihood. Note whether the auto-selected model agrees with the manually specified winner. Damped trend models (`Ad`) typically win on longer series with decelerating growth — check whether that is the case here.
+**Analysis:** Lower AICc indicates a better fitting model, and here R's auto-selected model performed the best with every variable. We were right with the first manually selected model of having an additive trend and no seasonality, but no dampening was present in these ETS models. Every auto-selected model by R has the same specifications of ETS(M,A,N), or multiplicative errors, additive trend, and no seasonality.
 
 ## ETS Residual Diagnostics
 
-Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show: (1) no autocorrelation in the time plot, (2) ACF spikes within bounds, and (3) a roughly normal histogram.
+Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show 3 main traits: no autocorrelation in the time plot, ACF values within 95% bounds, and a normally distributed histogram.
 
 ```{r ets-residuals}
 #| echo: false
@@ -268,9 +316,11 @@ ets_fit_imp %>% dplyr::select(auto_ets) %>%
   labs(title = "ETS Residual Diagnostics: Log Imports") + theme_bw()
 ```
 
-**Analysis:** Examine each panel. The 2020 Q2 COVID shock will appear as a large spike in the time plot and may widen the histogram tails — this is a structural break that ETS cannot capture. If ACF lags remain within bounds (aside from the outlier period), the white-noise assumption is broadly satisfied. Any significant ACF structure at seasonal lags (lag 4, 8) would suggest a seasonal ETS component is needed.
+**Analysis:** Examine each panel. The 2020 COVID shock still appears strongly on the time plot, but otherwise the mean is 0 for every variable in the best ETS models. All gg_tsresiduals plots for each ETS have ACF values within the 95% boundary, and a normally distributed histogram. We can therefor conclude that taking the log of the variables has given us stationary data to work with that's white noise. An Ljung-Box test will also be performed.
 
 ## Ljung-Box Test on ETS Residuals
+
+The Ljung-Box Test on our ETS models has a null hypothesis that there is no autocorrelation in our variables. If the p-value is below 0.05 as our threshold, we reject the null hypothesis and say that some autocorrelation is present.
 
 ```{r ets-ljungbox}
 #| echo: false
@@ -290,9 +340,11 @@ bind_rows(
   knitr::kable(caption = "Ljung-Box Test (lag=8): ETS Auto Models", digits = 4)
 ```
 
-**Analysis:** A p-value \> 0.05 indicates failure to reject the null of no autocorrelation in residuals — i.e., white noise is satisfied. P-values below 0.05 flag remaining structure the model has not captured.
+**Analysis:** In all of our Ljung-Box tests for the logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9943, 0.9980, and 0.7327 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation and that we can proceed with analysis.
 
 ## ETS Forecast on Test Set (2024 Q1 – 2025 Q4)
+
+The code below is going to now take our models, and after training them on training data, forecast them on the test data to verify accuracy of the ETS models.
 
 ```{r ets-forecast-test}
 #| echo: false
@@ -311,7 +363,7 @@ ets_accuracy <- bind_rows(
   dplyr::select(variable, .model, RMSE, MAE, MAPE, MASE) %>%
   arrange(variable, RMSE)
 
-# ── Table 1: Log GDP
+# Table 1: Log GDP
 ets_accuracy %>%
   filter(variable == "Log GDP") %>%
   knitr::kable(
@@ -333,7 +385,7 @@ ets_accuracy %>%
   kableExtra::column_spec(1:2, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(3:6, color = "#2c2c2c")
 
-# ── Table 2: Log DD & Log Imports
+# Table 2: Log DD & Log Imports
 ets_accuracy %>%
   filter(variable %in% c("Log DD", "Log Imports")) %>%
   knitr::kable(
@@ -355,6 +407,8 @@ ets_accuracy %>%
   kableExtra::column_spec(1:2, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(3:6, color = "#2c2c2c")
 ```
+
+Starting with the results of our Log GDP forecast accuracy, we see that the auto-selected ETS model by R has the lowest RMSE of all models. The ETS(A,A,N) model which was our first manually selected model performed the 2nd best out of the other models in terms of RMSE. When plotting the forecast of the future, we will therefor use the R-selected model since it has the lowest RMSE. Moving to the Log of domestic demand and log of imports ETS tests, we actual see the ETS(A,A,N) for Log_dd (domestic demand) has the lowest RMSE. This contrasted our training data results, but doing well on the training data doesn't guarentee a model does well on the test data. This same ETS(A,A,N) was also performing best on the test data for the log_imp variable. Therefor, when plotting our forecasts for the future, we will be using the ETS(A,A,N) model for domestic demand and imports. One important caveat is that while our manual models did well on the training data, that may be affected by the COVID outlier data, so it may not be the absolutely best data.
 
 ```{r ets-forecast-plots}
 #| echo: false
@@ -388,7 +442,7 @@ fc_ets_imp %>%
   theme_bw()
 ```
 
-**Analysis:** Compare the forecast path against actuals for each variable. Note whether the model captures the post-COVID recovery trajectory. Imports tends to be the hardest to forecast due to its higher remainder variance identified in STL. Check whether the actuals fall within the 80% prediction interval — if not, the model's uncertainty is underestimated.
+**Analysis:** Above we see the plots of each of the auto-selected ETS models on our test data. Each plot forecasts quite closely to the actual data, including the logged imports plot. Despite a small spike in real values for the logged imports, the 80% confidence interval contains both the forecast and actual data.
 
 ## ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)
 
