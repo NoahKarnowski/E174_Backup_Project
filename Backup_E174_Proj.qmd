@@ -1361,7 +1361,7 @@ fc_var_final_levels %>%
   theme_bw()
 ```
 
-**Analysis:** Forward-looking VAR forecasts in level space allow direct comparison to the ETS and ARIMA forward forecasts. All three models should imply continued moderate growth — the key differences will be in the slope (growth rate) and any cross-variable dynamics the VAR captures that the univariate models miss.
+**Analysis:** These forecasts of future values will be what we use to directly compare to the ETS and ARIMA forward forecasts. All three models show some moderate growth, the major differences being the slope (growth rate) and multivariable relaitonships that the Vector Autoregression (VAR) model catches.
 
 # Model Comparison and Selection
 
@@ -1374,9 +1374,9 @@ fc_var_final_levels %>%
 ets_acc <- bind_rows(
   accuracy(fc_ets_gdp %>% filter(.model == "auto_ets"), us_test) %>%
     mutate(method = "ETS", variable = "Log GDP"),
-  accuracy(fc_ets_dd  %>% filter(.model == "auto_ets"), us_test) %>%
+  accuracy(fc_ets_dd  %>% filter(.model == "ets_AAN"), us_test) %>%
     mutate(method = "ETS", variable = "Log Domestic Demand"),
-  accuracy(fc_ets_imp %>% filter(.model == "auto_ets"), us_test) %>%
+  accuracy(fc_ets_imp %>% filter(.model == "ets_AAN"), us_test) %>%
     mutate(method = "ETS", variable = "Log Imports")
 )
 
@@ -1385,7 +1385,7 @@ arima_acc <- bind_rows(
     mutate(method = "ARIMA", variable = "Log GDP"),
   accuracy(fc_arima_dd  %>% filter(.model == "auto_arima"), us_test) %>%
     mutate(method = "ARIMA", variable = "Log Domestic Demand"),
-  accuracy(fc_arima_imp %>% filter(.model == "auto_arima"), us_test) %>%
+  accuracy(fc_arima_imp %>% filter(.model == "arima_011"), us_test) %>%
     mutate(method = "ARIMA", variable = "Log Imports")
 )
 
