@@ -1034,8 +1034,6 @@ lag_select$selection
 
 **Analysis:** AIC and FPE are the most flexible according to AI, however since our goal is to forecast and AIC is the most familiar to us, we will be using 2 lags in our specifications. The other methods, HQ and SC, are more punative like BIC in order to create more stable models.
 
-**Note by AI:** The recommended lag from each criterion — the most common choice across criteria is a reasonable default. With quarterly data, `p=4` captures one full year of lags.
-
 ## Fit VAR Specifications (vars package)
 
 Below, using the vars package, we can observe the specifications using different lags from the previous code chunk's table. For our purposes, we are looking at the VAR of the training data with the model, with lag 2.
@@ -1076,7 +1074,7 @@ cat("--- VAR(4) Portmanteau Test ---\n")
 serial.test(var_p4, lags.pt = 10, type = "PT.asymptotic")
 ```
 
-**Analysis:** The Portmanteau test evaluates whether the VAR residuals are jointly white noise across all equations. A p-value \> 0.05 indicates no remaining serial correlation. Based on the results of the Portmanteau Test a lag of 1 failed the test having a p-value of 0.01245 which is less than 0.05, so we reject the null hypothesis. For lags of 2 and 4, both p-values of 0.07689 and 0.1415 are greater than 0.05. This means our data has no remaining serial correlation, and we can continue our analysis.
+**Analysis:** The Portmanteau test evaluates whether the VAR residuals are jointly white noise across all equations. A p-value \> 0.05 indicates no remaining serial correlation. Based on the results of the Portmanteau Test a lag of 1 failed the test having a p-value of 0.07689 which is less than 0.05, so we reject the null hypothesis. For lags of 2 and 4, both p-values of 0.07689 and 0.1415 are greater than 0.05. This means our data has no remaining serial correlation, and we can continue our analysis.
 
 ### gg_tsresiduals on VAR Residuals
 
