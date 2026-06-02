@@ -57,7 +57,7 @@ US_GDP <- read.csv("us_gdp.csv")
 
 ## Clean and Join into Tsibble
 
-Here, the chunk below selects the relevant columns from each CSV and removes the rest, then left joins the tables together to make a singular reference table. This master table is also cleaned, set to a tsibble format for time series analysis, and adds logged versions of each varaible's values for future analysis.
+Here, the chunk below selects the relevant columns from each CSV and removes the rest, then left joins the tables together to make a singular reference table. This master table is also cleaned, set to a tsibble format for time series analysis, and adds logged versions of each variable's values for future analysis.
 
 ```{r clean-data}
 #| echo: true
@@ -120,7 +120,7 @@ us_clean %>%
   theme_bw()
 ```
 
-**Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial cricis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.
+**Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial crisis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.
 
 ## Log-Transformed Series
 
@@ -141,7 +141,7 @@ us_clean %>%
   theme_bw()
 ```
 
-**Analysis:** Log transforming each variable did make the lines smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likey impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.
+**Analysis:** Log transforming each variable did make the lines smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likely impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.
 
 ## STL Decomposition
 
@@ -189,7 +189,7 @@ ETS (Error, Trend, and Seasonal) models decompose a series into three exponentia
 
 ## Fit Multiple ETS Specifications
 
-Five specifications are fit per variable: an automatically selected model, two damped/undamped additive variants, and one full additive seasonal model. Residuals are being checked before using the models for forecasting to confirm the data has white-noise for the remainders.
+Five specifications are fit per variable: an automatically selected model, two damped/undampened additive variants, and one full additive seasonal model. Residuals are being checked before using the models for forecasting to confirm the data has white-noise for the remainders.
 
 ```{r ets-fit}
 #| echo: true
@@ -935,11 +935,11 @@ fc_arima_imp_final %>%
   theme_bw()
 ```
 
-**Analysis:** All of these forecasts for future values use the best specification that performed well on the test data, which in this case is R's auto-selected ARIMA for GDP and domestic demand, and ARIMA(0,1,1) for improts. So far, these ARIMA model forecasts look very similar to the ETS forecasts, including the logged import forecast values.
+**Analysis:** All of these forecasts for future values use the best specification that performed well on the test data, which in this case is R's auto-selected ARIMA for GDP and domestic demand, and ARIMA(0,1,1) for imports. So far, these ARIMA model forecasts look very similar to the ETS forecasts, including the logged import forecast values.
 
 # VAR Modelling
 
-VAR (Vector Autoregression) jointly models all three variables as a system, allowing each variable's forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that univariate ETS and ARIMA cannot.
+VAR (Vector Auto-regression) jointly models all three variables as a system, allowing each variable's forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that univariate ETS and ARIMA cannot.
 
 VAR requires **stationary** inputs. Because all three log series have unit roots (difference = 1), we work with first-differenced log series.
 
@@ -1032,7 +1032,7 @@ lag_select$criteria
 lag_select$selection
 ```
 
-**Analysis:** AIC and FPE are the most flexible according to AI, however since our goal is to forecast and AIC is the most familiar to us, we will be using 2 lags in our specifications. The other methods, HQ and SC, are more punative like BIC in order to create more stable models.
+**Analysis:** AIC and FPE are the most flexible according to AI, however since our goal is to forecast and AIC is the most familiar to us, we will be using 2 lags in our specifications. The other methods, HQ and SC, are more punitive like BIC in order to create more stable models.
 
 ## Fit VAR Specifications (vars package)
 
@@ -1192,7 +1192,7 @@ fc_var_test %>%
   theme_bw()
 ```
 
-**Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that's a good sign. Unlike the ETS and ARIMA analysis previosly, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph an values fluctuate more than the GDP and domestic demand values.
+**Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that's a good sign. Unlike the ETS and ARIMA analysis previously, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph an values fluctuate more than the GDP and domestic demand values.
 
 ## VAR Forecast on Test Set — Back-Transformed to Levels
 
@@ -1279,7 +1279,7 @@ var_levels_tbl %>%
   theme_bw()
 ```
 
-**Analysis:** Back-transformation via cumulative sum converts quarter-over-quarter log growth forecasts back to log level values. This is more economically interpretable as the distance between the blue forecast line and the red actual points is the forecast error on the log level scale. This forecast error on the log level scale is approximately equal to the percentage error. Like the previous code chunk with a differenced log scale, the GDP and domestic demand forecasts (dark cyan lines) do quite well fitting the test data, but the logged imports forecast continues to have a big error in fitting the data.
+**Analysis:** Back-transformation via cumulative sum converts quarter-over-quarter log growth forecasts back to log level values. This is more economically interpret-able as the distance between the blue forecast line and the red actual points is the forecast error on the log level scale. This forecast error on the log level scale is approximately equal to the percentage error. Like the previous code chunk with a differenced log scale, the GDP and domestic demand forecasts (dark cyan lines) do quite well fitting the test data, but the logged imports forecast continues to have a big error in fitting the data.
 
 ## VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)
 
@@ -1310,7 +1310,7 @@ fc_var_final %>%
   theme_bw()
 ```
 
-The VAR(2) model forecasts all three series of US GDP, domestic demand, and imports going to near-zero first-difference log growth through 2027 Q4, which in levels translates to **slow but stable positive growth**. The lag 2 structure which should have been implamented means the model is capturing up to two quarters of backward momentum. The imports panel has the widest prediction interval due to trade being highly volatile relative to GDP during demand shocks.
+The VAR(2) model forecasts all three series of US GDP, domestic demand, and imports going to near-zero first-difference log growth through 2027 Q4, which in levels translates to **slow but stable positive growth**. The lag 2 structure which should have been implemented means the model is capturing up to two quarters of backward momentum. The imports panel has the widest prediction interval due to trade being highly volatile relative to GDP during demand shocks.
 
 ### Back-Transformed to Log Levels
 
@@ -1385,7 +1385,7 @@ fc_var_final_levels %>%
   theme_bw()
 ```
 
-**Analysis:** These forecasts of future values will be what we use to directly compare to the ETS and ARIMA forward forecasts. All three models show some moderate growth, the major differences being the slope (growth rate) and multivariable relaitonships that the Vector Autoregression (VAR) model catches.
+**Analysis:** These forecasts of future values will be what we use to directly compare to the ETS and ARIMA forward forecasts. All three models show some moderate growth, the major differences being the slope (growth rate) and multivariable relationships that the Vector Auto-regression (VAR) model catches.
 
 # Model Comparison and Selection
 
@@ -1477,15 +1477,15 @@ unified_acc %>%
 
 **Note:** VAR accuracy is measured on the differenced log scale while ETS and ARIMA are on the log level scale — RMSE values are not directly comparable across methods. Within each variable, compare ETS vs ARIMA (same scale). The VAR comparison is informative for understanding the differenced growth forecast quality separately.
 
-**Analysis:** For each variable, identify which method achieves the lowest RMSE and lowest MAPE on the test set. If ETS wins on one criterion and ARIMA on another, both can be retained as "well-fitting" models for the final forward forecast. The VAR's value is in capturing joint dynamics across variables rather than minimising univariate forecast error.
+**Analysis:** For each variable, identify which method achieves the lowest RMSE and lowest MAPE on the test set. If ETS wins on one criterion and ARIMA on another, both can be retained as "well-fitting" models for the final forward forecast. The VAR's value is in capturing joint dynamics across variables rather than minimizing univariate forecast error.
 
 ## Final Model Selection Summary
 
 | Variable | Best by AICc (within family) | Best by RMSE (test set) | Recommendation |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 | Either model is defensible; use **auto ETS (M,A,N)** for simplicity since it also has the best in-family AICc and matches ARIMA on test performance |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA (auto, RMSE = 0.0052)** edges ETS (0.0055) | **Auto ARIMA (0,1,0) w/ drift** — wins on both test RMSE and in-family AICc |
-| Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS (ets_AAN, RMSE = 0.0396)** beats ARIMA (0.0411) | **ETS(A,A,N)** — wins on test RMSE; imports are volatile enough that the simpler ETS trend model generalises better than ARIMA |
+| Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS (ets_AAN, RMSE = 0.0396)** beats ARIMA (0.0411) | **ETS(A,A,N)** — wins on test RMSE; imports are volatile enough that the simpler ETS trend model generalizes better than ARIMA |
 
 **Note:** Fill in this table after rendering based on your AICc tables and the accuracy table above.
 
@@ -1493,7 +1493,7 @@ unified_acc %>%
 
 **Summary of Findings:**
 
-All three US national accounts series — GDP, domestic demand, and imports — exhibit strong upward trends with stable quarterly seasonality and remainder variance dominated by two structural breaks: the 2008–09 Global Financial Crisis and the 2020 Q2 COVID-19 collapse. The log transformation effectively stabilises variance, and first-differencing achieves stationarity as confirmed by KPSS tests.
+All three US national accounts series — GDP, domestic demand, and imports — exhibit strong upward trends with stable quarterly seasonality and remainder variance dominated by two structural breaks: the 2008–09 Global Financial Crisis and the 2020 Q2 COVID-19 collapse. The log transformation effectively stabilizes variance, and first-differencing achieves stationarity as confirmed by KPSS tests.
 
 **ETS** models capture the trend-seasonal structure well. The auto-selected specification will likely be an AAN or AAA model. The primary limitation is that ETS treats the COVID outlier as a one-period shock and reverts to trend quickly — this can produce overconfident forecasts if the post-COVID recovery trajectory differs from pre-pandemic trend.
 
