@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Noah K and Crawford H">
-<meta name="dcterms.date" content="2026-05-31">
+<meta name="dcterms.date" content="2026-06-01">
 
 <title>Forecasting US National Accounts: GDP, Domestic Demand, and Imports</title>
 <style>
@@ -100,7 +100,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#log-transformed-series" id="toc-log-transformed-series" class="nav-link" data-scroll-target="#log-transformed-series"><span class="header-section-number">3.2</span> Log-Transformed Series</a></li>
   <li><a href="#stl-decomposition" id="toc-stl-decomposition" class="nav-link" data-scroll-target="#stl-decomposition"><span class="header-section-number">3.3</span> STL Decomposition</a></li>
   </ul></li>
-  <li><a href="#train-test-split" id="toc-train-test-split" class="nav-link" data-scroll-target="#train-test-split"><span class="header-section-number">4</span> Train / Test Split</a></li>
+  <li><a href="#training-and-testing-split" id="toc-training-and-testing-split" class="nav-link" data-scroll-target="#training-and-testing-split"><span class="header-section-number">4</span> Training and Testing Split</a></li>
   <li><a href="#ets-modelling" id="toc-ets-modelling" class="nav-link" data-scroll-target="#ets-modelling"><span class="header-section-number">5</span> ETS Modelling</a>
   <ul class="collapse">
   <li><a href="#fit-multiple-ets-specifications" id="toc-fit-multiple-ets-specifications" class="nav-link" data-scroll-target="#fit-multiple-ets-specifications"><span class="header-section-number">5.1</span> Fit Multiple ETS Specifications</a></li>
@@ -120,39 +120,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#fit-arima-specifications" id="toc-fit-arima-specifications" class="nav-link" data-scroll-target="#fit-arima-specifications"><span class="header-section-number">6.2</span> Fit ARIMA Specifications</a></li>
   <li><a href="#arima-model-comparison-aicc-and-bic" id="toc-arima-model-comparison-aicc-and-bic" class="nav-link" data-scroll-target="#arima-model-comparison-aicc-and-bic"><span class="header-section-number">6.3</span> ARIMA Model Comparison: AICc and BIC</a></li>
-  <li><a href="#auto-arima-model-report" id="toc-auto-arima-model-report" class="nav-link" data-scroll-target="#auto-arima-model-report"><span class="header-section-number">6.4</span> Auto-ARIMA Model Report</a></li>
-  <li><a href="#arima-residual-diagnostics" id="toc-arima-residual-diagnostics" class="nav-link" data-scroll-target="#arima-residual-diagnostics"><span class="header-section-number">6.5</span> ARIMA Residual Diagnostics</a></li>
-  <li><a href="#ljung-box-test-on-arima-residuals" id="toc-ljung-box-test-on-arima-residuals" class="nav-link" data-scroll-target="#ljung-box-test-on-arima-residuals"><span class="header-section-number">6.6</span> Ljung-Box Test on ARIMA Residuals</a></li>
-  <li><a href="#arima-forecast-on-test-set-2024-q1-2025-q4" id="toc-arima-forecast-on-test-set-2024-q1-2025-q4" class="nav-link" data-scroll-target="#arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">6.7</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</a></li>
-  <li><a href="#arima-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">6.8</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a></li>
   </ul></li>
-  <li><a href="#var-modelling" id="toc-var-modelling" class="nav-link" data-scroll-target="#var-modelling"><span class="header-section-number">7</span> VAR Modelling</a>
+  <li><a href="#auto-arima-model-report" id="toc-auto-arima-model-report" class="nav-link" data-scroll-target="#auto-arima-model-report"><span class="header-section-number">7</span> Auto-ARIMA Model Report</a>
   <ul class="collapse">
-  <li><a href="#prepare-differenced-data" id="toc-prepare-differenced-data" class="nav-link" data-scroll-target="#prepare-differenced-data"><span class="header-section-number">7.1</span> Prepare Differenced Data</a></li>
-  <li><a href="#stationarity-check-on-differenced-series" id="toc-stationarity-check-on-differenced-series" class="nav-link" data-scroll-target="#stationarity-check-on-differenced-series"><span class="header-section-number">7.2</span> Stationarity Check on Differenced Series</a></li>
-  <li><a href="#acf-of-differenced-series" id="toc-acf-of-differenced-series" class="nav-link" data-scroll-target="#acf-of-differenced-series"><span class="header-section-number">7.3</span> ACF of Differenced Series</a></li>
-  <li><a href="#var-lag-selection" id="toc-var-lag-selection" class="nav-link" data-scroll-target="#var-lag-selection"><span class="header-section-number">7.4</span> VAR Lag Selection</a></li>
-  <li><a href="#fit-var-specifications-vars-package" id="toc-fit-var-specifications-vars-package" class="nav-link" data-scroll-target="#fit-var-specifications-vars-package"><span class="header-section-number">7.5</span> Fit VAR Specifications (vars package)</a></li>
-  <li><a href="#var-residual-diagnostics" id="toc-var-residual-diagnostics" class="nav-link" data-scroll-target="#var-residual-diagnostics"><span class="header-section-number">7.6</span> VAR Residual Diagnostics</a>
+  <li><a href="#arima-residual-diagnostics" id="toc-arima-residual-diagnostics" class="nav-link" data-scroll-target="#arima-residual-diagnostics"><span class="header-section-number">7.1</span> ARIMA Residual Diagnostics</a></li>
+  <li><a href="#ljung-box-test-on-arima-residuals" id="toc-ljung-box-test-on-arima-residuals" class="nav-link" data-scroll-target="#ljung-box-test-on-arima-residuals"><span class="header-section-number">7.2</span> Ljung-Box Test on ARIMA Residuals</a></li>
+  <li><a href="#arima-forecast-on-test-set-2024-q1-2025-q4" id="toc-arima-forecast-on-test-set-2024-q1-2025-q4" class="nav-link" data-scroll-target="#arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">7.3</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</a></li>
+  <li><a href="#arima-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">7.4</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a></li>
+  </ul></li>
+  <li><a href="#var-modelling" id="toc-var-modelling" class="nav-link" data-scroll-target="#var-modelling"><span class="header-section-number">8</span> VAR Modelling</a>
   <ul class="collapse">
-  <li><a href="#portmanteau-serial-correlation-test" id="toc-portmanteau-serial-correlation-test" class="nav-link" data-scroll-target="#portmanteau-serial-correlation-test"><span class="header-section-number">7.6.1</span> Portmanteau Serial Correlation Test</a></li>
-  <li><a href="#gg_tsresiduals-on-var-residuals" id="toc-gg_tsresiduals-on-var-residuals" class="nav-link" data-scroll-target="#gg_tsresiduals-on-var-residuals"><span class="header-section-number">7.6.2</span> gg_tsresiduals on VAR Residuals</a></li>
-  </ul></li>
-  <li><a href="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline" id="toc-fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="nav-link" data-scroll-target="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">7.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</a></li>
-  <li><a href="#var-forecast-on-test-set-differenced-log-scale" id="toc-var-forecast-on-test-set-differenced-log-scale" class="nav-link" data-scroll-target="#var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">7.8</span> VAR Forecast on Test Set — Differenced Log Scale</a></li>
-  <li><a href="#var-forecast-on-test-set-back-transformed-to-levels" id="toc-var-forecast-on-test-set-back-transformed-to-levels" class="nav-link" data-scroll-target="#var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">7.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</a></li>
-  <li><a href="#var-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-var-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">7.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a>
+  <li><a href="#prepare-differenced-data" id="toc-prepare-differenced-data" class="nav-link" data-scroll-target="#prepare-differenced-data"><span class="header-section-number">8.1</span> Prepare Differenced Data</a></li>
+  <li><a href="#stationarity-check-on-differenced-series" id="toc-stationarity-check-on-differenced-series" class="nav-link" data-scroll-target="#stationarity-check-on-differenced-series"><span class="header-section-number">8.2</span> Stationarity Check on Differenced Series</a></li>
+  <li><a href="#acf-of-differenced-series" id="toc-acf-of-differenced-series" class="nav-link" data-scroll-target="#acf-of-differenced-series"><span class="header-section-number">8.3</span> ACF of Differenced Series</a></li>
+  <li><a href="#var-lag-selection" id="toc-var-lag-selection" class="nav-link" data-scroll-target="#var-lag-selection"><span class="header-section-number">8.4</span> VAR Lag Selection</a></li>
+  <li><a href="#fit-var-specifications-vars-package" id="toc-fit-var-specifications-vars-package" class="nav-link" data-scroll-target="#fit-var-specifications-vars-package"><span class="header-section-number">8.5</span> Fit VAR Specifications (vars package)</a></li>
+  <li><a href="#var-residual-diagnostics" id="toc-var-residual-diagnostics" class="nav-link" data-scroll-target="#var-residual-diagnostics"><span class="header-section-number">8.6</span> VAR Residual Diagnostics</a>
   <ul class="collapse">
-  <li><a href="#differenced-log-scale" id="toc-differenced-log-scale" class="nav-link" data-scroll-target="#differenced-log-scale"><span class="header-section-number">7.10.1</span> Differenced Log Scale</a></li>
-  <li><a href="#back-transformed-to-log-levels" id="toc-back-transformed-to-log-levels" class="nav-link" data-scroll-target="#back-transformed-to-log-levels"><span class="header-section-number">7.10.2</span> Back-Transformed to Log Levels</a></li>
+  <li><a href="#portmanteau-serial-correlation-test-broader-version-of-box-pierce-and-ljung-box-tests" id="toc-portmanteau-serial-correlation-test-broader-version-of-box-pierce-and-ljung-box-tests" class="nav-link" data-scroll-target="#portmanteau-serial-correlation-test-broader-version-of-box-pierce-and-ljung-box-tests"><span class="header-section-number">8.6.1</span> Portmanteau Serial Correlation Test (Broader version of Box-Pierce and Ljung-Box Tests)</a></li>
+  <li><a href="#gg_tsresiduals-on-var-residuals" id="toc-gg_tsresiduals-on-var-residuals" class="nav-link" data-scroll-target="#gg_tsresiduals-on-var-residuals"><span class="header-section-number">8.6.2</span> gg_tsresiduals on VAR Residuals</a></li>
   </ul></li>
-  </ul></li>
-  <li><a href="#model-comparison-and-selection" id="toc-model-comparison-and-selection" class="nav-link" data-scroll-target="#model-comparison-and-selection"><span class="header-section-number">8</span> Model Comparison and Selection</a>
+  <li><a href="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline" id="toc-fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="nav-link" data-scroll-target="#fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">8.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</a></li>
+  <li><a href="#var-forecast-on-test-set-differenced-log-scale" id="toc-var-forecast-on-test-set-differenced-log-scale" class="nav-link" data-scroll-target="#var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">8.8</span> VAR Forecast on Test Set — Differenced Log Scale</a></li>
+  <li><a href="#var-forecast-on-test-set-back-transformed-to-levels" id="toc-var-forecast-on-test-set-back-transformed-to-levels" class="nav-link" data-scroll-target="#var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">8.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</a></li>
+  <li><a href="#var-forecast-beyond-last-observation-2026-q1-2027-q4" id="toc-var-forecast-beyond-last-observation-2026-q1-2027-q4" class="nav-link" data-scroll-target="#var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">8.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</a>
   <ul class="collapse">
-  <li><a href="#unified-accuracy-table-best-models-across-all-methods" id="toc-unified-accuracy-table-best-models-across-all-methods" class="nav-link" data-scroll-target="#unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">8.1</span> Unified Accuracy Table: Best Models Across All Methods</a></li>
-  <li><a href="#final-model-selection-summary" id="toc-final-model-selection-summary" class="nav-link" data-scroll-target="#final-model-selection-summary"><span class="header-section-number">8.2</span> Final Model Selection Summary</a></li>
+  <li><a href="#differenced-log-scale" id="toc-differenced-log-scale" class="nav-link" data-scroll-target="#differenced-log-scale"><span class="header-section-number">8.10.1</span> Differenced Log Scale</a></li>
+  <li><a href="#back-transformed-to-log-levels" id="toc-back-transformed-to-log-levels" class="nav-link" data-scroll-target="#back-transformed-to-log-levels"><span class="header-section-number">8.10.2</span> Back-Transformed to Log Levels</a></li>
   </ul></li>
-  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">9</span> Conclusion</a></li>
+  </ul></li>
+  <li><a href="#model-comparison-and-selection" id="toc-model-comparison-and-selection" class="nav-link" data-scroll-target="#model-comparison-and-selection"><span class="header-section-number">9</span> Model Comparison and Selection</a>
+  <ul class="collapse">
+  <li><a href="#unified-accuracy-table-best-models-across-all-methods" id="toc-unified-accuracy-table-best-models-across-all-methods" class="nav-link" data-scroll-target="#unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">9.1</span> Unified Accuracy Table: Best Models Across All Methods</a></li>
+  <li><a href="#final-model-selection-summary" id="toc-final-model-selection-summary" class="nav-link" data-scroll-target="#final-model-selection-summary"><span class="header-section-number">9.2</span> Final Model Selection Summary</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">10</span> Conclusion</a></li>
   </ul>
 </nav>
 </div>
@@ -177,7 +179,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 31, 2026</p>
+      <p class="date">June 1, 2026</p>
     </div>
   </div>
   
@@ -191,7 +193,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="ai-disclaimer" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> AI Disclaimer:</h1>
-<p>AI, specifically Claude, Perplexity, and Gemini were consulted with to troubleshoot errors, form tables for the output values, and help with cleaning up our code.</p>
+<p>AI, specifically Claude, Perplexity, and Gemini were consulted with to troubleshoot errors, form tables for the output values, and help with cleaning up our code. AI also helped us to add additions making our knitted report very pretty.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -230,6 +232,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="clean-and-join-into-tsibble" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="clean-and-join-into-tsibble"><span class="header-section-number">2.2</span> Clean and Join into Tsibble</h2>
+<p>Here, the chunk below selects the relevant columns from each CSV and removes the rest, then left joins the tables together to make a singular reference table. This master table is also cleaned, set to a tsibble format for time series analysis, and adds logged versions of each varaible’s values for future analysis.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -254,19 +257,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">domestic_demand =</span> <span class="fu">sum</span>(domestic_demand, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">gdp             =</span> <span class="fu">sum</span>(gdp,             <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">imports         =</span> <span class="fu">sum</span>(imports,         <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">key =</span> country, <span class="at">index =</span> date)</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Add log-transformed columns — stabilises variance and linearises growth</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>us_clean <span class="ot">&lt;-</span> us_clean <span class="sc">%&gt;%</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_gdp             =</span> <span class="fu">log</span>(gdp),</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_domestic_demand =</span> <span class="fu">log</span>(domestic_demand),</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_imports         =</span> <span class="fu">log</span>(imports)</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(us_clean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span> <span class="fu">as_tsibble</span>(<span class="at">key =</span> country, <span class="at">index =</span> date)</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Add log-transformed columns — stabilises variance and linearises growth</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>us_clean <span class="ot">&lt;-</span> us_clean <span class="sc">%&gt;%</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_gdp             =</span> <span class="fu">log</span>(gdp),</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_domestic_demand =</span> <span class="fu">log</span>(domestic_demand),</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_imports         =</span> <span class="fu">log</span>(imports)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(us_clean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Rows: 104
@@ -288,6 +289,7 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 <h1 data-number="3"><span class="header-section-number">3</span> Exploratory Analysis</h1>
 <section id="raw-level-plots" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="raw-level-plots"><span class="header-section-number">3.1</span> Raw Level Plots</h2>
+<p>Basic time plots of the base variables, GDP, domestic demand, and import values for the US are created below.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -297,10 +299,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> All three series exhibit clear upward trends with a visible contraction around 2008–09 (Global Financial Crisis) and a sharp drop in 2020 Q2 (COVID-19 pandemic). Imports show the most volatility of the three. The upward drift and variance behaviour motivate a log transformation before modelling.</p>
+<p><strong>Analysis:</strong> All three series exhibit clear upward trends with a visible drops around 2008 for the global financial cricis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.</p>
 </section>
 <section id="log-transformed-series" class="level2" data-number="3.2">
 <h2 data-number="3.2" class="anchored" data-anchor-id="log-transformed-series"><span class="header-section-number">3.2</span> Log-Transformed Series</h2>
+<p>Like the previous chunk, we are creating a time plot of each variable, this time for the logged versions of each variable.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -310,7 +313,7 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Log transformation produces more linear growth paths. Variance instability is reduced but the COVID shock remains a prominent outlier in all three series — this will affect residual diagnostics across all models.</p>
+<p><strong>Analysis:</strong> Log transforming each variable did make the lines smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likey impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.</p>
 </section>
 <section id="stl-decomposition" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="stl-decomposition"><span class="header-section-number">3.3</span> STL Decomposition</h2>
@@ -337,16 +340,17 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> All three series share the same decomposition structure: a dominant upward trend, a small but consistent quarterly seasonal pattern (amplitude ≈ ±0.002 for GDP and domestic demand, ≈ ±0.005 for imports), and a remainder capturing the 2008–09 recession and the 2020 COVID collapse. The seasonal component is stable in amplitude (no growth), suggesting additive seasonality on the log scale. The relatively small seasonal amplitude compared to trend means seasonal differencing may not always improve fit — model selection via AICc will determine whether <code>D=1</code> is warranted.</p>
+<p><strong>Analysis:</strong> All three series share the same decomposition pattern of a clear positive trend, consistent seasonal patterns, and a remainder that hovers around 0 (the mean) until the COVID-19 pandemic. The seasonal component is highly consistent across time, so additive instead of multiplicative seasonality should be present in our ETS models. When we use R and other tests to pick the best ETS decomposition, we will know for sure what specifications are needed.</p>
 </section>
 </section>
-<section id="train-test-split" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Train / Test Split</h1>
+<section id="training-and-testing-split" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Training and Testing Split</h1>
+<p>As the chunk title implies, we are setting out training data period, 2000 Q1 to 2023 Q4, and our test data period, 2024 Q1 to 2025 Q4.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Training: 2000 Q1 – 2023 Q4  →  96 quarters</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Test:     2024 Q1 – 2025 Q4  →   8 quarters</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Training: 2000 Q1 – 2023 Q4  =  96 quarters</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Test:     2024 Q1 – 2025 Q4  =   8 quarters</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>us_train <span class="ot">&lt;-</span> us_clean <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">&lt;=</span> <span class="fu">yearquarter</span>(<span class="st">"2023 Q4"</span>))</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>us_test  <span class="ot">&lt;-</span> us_clean <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">&gt;=</span> <span class="fu">yearquarter</span>(<span class="st">"2024 Q1"</span>))</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
@@ -366,10 +370,10 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </section>
 <section id="ets-modelling" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> ETS Modelling</h1>
-<p>ETS (Error–Trend–Seasonal) models are state-space models that decompose a series into three exponentially smoothed components. Because all series are log-transformed, additive ETS on the log scale is equivalent to multiplicative ETS on the original scale.</p>
+<p>ETS (Error, Trend, and Seasonal) models decompose a series into three exponentially smoothed components. Since all series are log-transformed, additive ETS on the log scale here is equivalent to multiplicative ETS on the original scale.</p>
 <section id="fit-multiple-ets-specifications" class="level2" data-number="5.1">
 <h2 data-number="5.1" class="anchored" data-anchor-id="fit-multiple-ets-specifications"><span class="header-section-number">5.1</span> Fit Multiple ETS Specifications</h2>
-<p>Five specifications are fit per variable: an automatically selected model, two damped/undamped additive variants, and one full additive seasonal model. Residuals are checked <em>before</em> using the models for forecasting to confirm white-noise assumptions.</p>
+<p>Five specifications are fit per variable: an automatically selected model, two damped/undamped additive variants, and one full additive seasonal model. Residuals are being checked before using the models for forecasting to confirm the data has white-noise for the remainders.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -380,28 +384,22 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAN  =</span> <span class="fu">ETS</span>(log_gdp <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdN =</span> <span class="fu">ETS</span>(log_gdp <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAA  =</span> <span class="fu">ETS</span>(log_gdp <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)),</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdA =</span> <span class="fu">ETS</span>(log_gdp <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>))</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Domestic Demand</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>ets_fit_dd <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_ets =</span> <span class="fu">ETS</span>(log_domestic_demand),</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAN  =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdN =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAA  =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)),</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdA =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>))</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Imports</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>ets_fit_imp <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_ets =</span> <span class="fu">ETS</span>(log_imports),</span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAN  =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdN =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAA  =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)),</span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdA =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>))</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdA =</span> <span class="fu">ETS</span>(log_gdp <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Domestic Demand</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>ets_fit_dd <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_ets =</span> <span class="fu">ETS</span>(log_domestic_demand),</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAN  =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)), <span class="at">ets_AAdN =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)), <span class="at">ets_AAA  =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)), <span class="at">ets_AAdA =</span> <span class="fu">ETS</span>(log_domestic_demand <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)))</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Imports</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>ets_fit_imp <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_ets =</span> <span class="fu">ETS</span>(log_imports),</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAN  =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdN =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAA  =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>)  <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)),</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">ets_AAdA =</span> <span class="fu">ETS</span>(log_imports <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"A"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -409,20 +407,20 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 <h2 data-number="5.2" class="anchored" data-anchor-id="ets-model-comparison-aicc-and-bic"><span class="header-section-number">5.2</span> ETS Model Comparison: AICc and BIC</h2>
 <div class="cell">
 <div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>ETS Information Criteria: Log GDP</caption>
+<table class="table table-striped table-hover table-bordered caption-top table-sm small">
+<caption>ETS for Logged GDP</caption>
 <thead>
 <tr class="header">
-<th style="text-align: left;">.model</th>
-<th style="text-align: right;">AICc</th>
-<th style="text-align: right;">BIC</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Model</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AICc</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">BIC</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">auto_ets</td>
-<td style="text-align: right;">-391.96</td>
-<td style="text-align: right;">-379.81</td>
+<td style="text-align: left; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">auto_ets</td>
+<td style="text-align: right; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">-391.96</td>
+<td style="text-align: right; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">-379.81</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">ets_AAN</td>
@@ -448,20 +446,20 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </table>
 </div>
 <div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>ETS Information Criteria: Log Domestic Demand</caption>
+<table class="table table-striped table-hover table-bordered caption-top table-sm small">
+<caption>ETS for Logged Domestic Demand</caption>
 <thead>
 <tr class="header">
-<th style="text-align: left;">.model</th>
-<th style="text-align: right;">AICc</th>
-<th style="text-align: right;">BIC</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Model</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AICc</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">BIC</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">auto_ets</td>
-<td style="text-align: right;">-384.39</td>
-<td style="text-align: right;">-372.24</td>
+<td style="text-align: left; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">auto_ets</td>
+<td style="text-align: right; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">-384.39</td>
+<td style="text-align: right; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">-372.24</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">ets_AAN</td>
@@ -487,20 +485,20 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </table>
 </div>
 <div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>ETS Information Criteria: Log Imports</caption>
+<table class="table table-striped table-hover table-bordered caption-top table-sm small">
+<caption>ETS for Logged Imports</caption>
 <thead>
 <tr class="header">
-<th style="text-align: left;">.model</th>
-<th style="text-align: right;">AICc</th>
-<th style="text-align: right;">BIC</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Model</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AICc</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">BIC</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">auto_ets</td>
-<td style="text-align: right;">-208.78</td>
-<td style="text-align: right;">-196.63</td>
+<td style="text-align: left; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">auto_ets</td>
+<td style="text-align: right; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">-208.78</td>
+<td style="text-align: right; font-weight: bold; background-color: rgba(212, 237, 218, 255) !important;">-196.63</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">ets_AAN</td>
@@ -525,12 +523,30 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </tbody>
 </table>
 </div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A mable: 1 x 1
+   .model_desc
+       &lt;model&gt;
+1 &lt;ETS(M,A,N)&gt;</code></pre>
 </div>
-<p><strong>Analysis:</strong> Lower AICc indicates a better penalised likelihood. Note whether the auto-selected model agrees with the manually specified winner. Damped trend models (<code>Ad</code>) typically win on longer series with decelerating growth — check whether that is the case here.</p>
+<div class="cell-output cell-output-stdout">
+<pre><code># A mable: 1 x 1
+   .model_desc
+       &lt;model&gt;
+1 &lt;ETS(M,A,N)&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A mable: 1 x 1
+   .model_desc
+       &lt;model&gt;
+1 &lt;ETS(M,A,N)&gt;</code></pre>
+</div>
+</div>
+<p><strong>Analysis:</strong> Lower AICc indicates a better fitting model, and here R’s auto-selected model performed the best with every variable. We were right with the first manually selected model of having an additive trend and no seasonality, but no dampening was present in these ETS models. Every auto-selected model by R has the same specifications of ETS(M,A,N), or multiplicative errors, additive trend, and no seasonality.</p>
 </section>
 <section id="ets-residual-diagnostics" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="ets-residual-diagnostics"><span class="header-section-number">5.3</span> ETS Residual Diagnostics</h2>
-<p>Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show: (1) no autocorrelation in the time plot, (2) ACF spikes within bounds, and (3) a roughly normal histogram.</p>
+<p>Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show 3 main traits: no autocorrelation in the time plot, ACF values within 95% bounds, and a normally distributed histogram.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -554,10 +570,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Examine each panel. The 2020 Q2 COVID shock will appear as a large spike in the time plot and may widen the histogram tails — this is a structural break that ETS cannot capture. If ACF lags remain within bounds (aside from the outlier period), the white-noise assumption is broadly satisfied. Any significant ACF structure at seasonal lags (lag 4, 8) would suggest a seasonal ETS component is needed.</p>
+<p><strong>Analysis:</strong> Examine each panel. The 2020 COVID shock still appears strongly on the time plot, but otherwise the mean is 0 for every variable in the best ETS models. All gg_tsresiduals plots for each ETS have ACF values within the 95% boundary, and a normally distributed histogram. We can therefor conclude that taking the log of the variables has given us stationary data to work with that’s white noise. An Ljung-Box test will also be performed.</p>
 </section>
 <section id="ljung-box-test-on-ets-residuals" class="level2" data-number="5.4">
 <h2 data-number="5.4" class="anchored" data-anchor-id="ljung-box-test-on-ets-residuals"><span class="header-section-number">5.4</span> Ljung-Box Test on ETS Residuals</h2>
+<p>The Ljung-Box Test on our ETS models has a null hypothesis that there is no autocorrelation in our variables. If the p-value is below 0.05 as our threshold, we reject the null hypothesis and say that some autocorrelation is present.</p>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -589,10 +606,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </table>
 </div>
 </div>
-<p><strong>Analysis:</strong> A p-value &gt; 0.05 indicates failure to reject the null of no autocorrelation in residuals — i.e., white noise is satisfied. P-values below 0.05 flag remaining structure the model has not captured.</p>
+<p><strong>Analysis:</strong> In all of our Ljung-Box tests for the logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9943, 0.9980, and 0.7327 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation and that we can proceed with analysis.</p>
 </section>
 <section id="ets-forecast-on-test-set-2024-q1-2025-q4" class="level2" data-number="5.5">
 <h2 data-number="5.5" class="anchored" data-anchor-id="ets-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">5.5</span> ETS Forecast on Test Set (2024 Q1 – 2025 Q4)</h2>
+<p>The code below is going to now take our models, and after training them on training data, forecast them on the test data to verify accuracy of the ETS models.</p>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -749,6 +767,7 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </table>
 </div>
 </div>
+<p>Starting with the results of our Log GDP forecast accuracy, we see that the auto-selected ETS model by R has the lowest RMSE of all models. The ETS(A,A,N) model which was our first manually selected model performed the 2nd best out of the other models in terms of RMSE. When plotting the forecast of the future, we will therefor use the R-selected model since it has the lowest RMSE. Moving to the Log of domestic demand and log of imports ETS tests, we actual see the ETS(A,A,N) for Log_dd (domestic demand) has the lowest RMSE. This contrasted our training data results, but doing well on the training data doesn’t guarentee a model does well on the test data. This same ETS(A,A,N) was also performing best on the test data for the log_imp variable. Therefor, when plotting our forecasts for the future, we will be using the ETS(A,A,N) model for domestic demand and imports. One important caveat is that while our manual models did well on the training data, that may be affected by the COVID outlier data, so it may not be the absolutely best data.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -772,11 +791,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Compare the forecast path against actuals for each variable. Note whether the model captures the post-COVID recovery trajectory. Imports tends to be the hardest to forecast due to its higher remainder variance identified in STL. Check whether the actuals fall within the 80% prediction interval — if not, the model’s uncertainty is underestimated.</p>
+<p><strong>Analysis:</strong> Above we see the plots of each of the auto-selected ETS models on our test data. Each plot forecasts quite closely to the actual data, including the logged imports plot. Despite a small spike in real values for the logged imports, the 80% confidence interval contains both the forecast and actual data.</p>
 </section>
 <section id="ets-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="5.6">
 <h2 data-number="5.6" class="anchored" data-anchor-id="ets-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">5.6</span> ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
-<p>Models are refit on the <strong>full dataset</strong> before extrapolating forward.</p>
+<p>Models are now forecasting into the future based on their performance of the test data.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -800,12 +819,12 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Forward forecasts reflect the trend and seasonal structure estimated over the full 2000–2025 period. Prediction intervals widen as the horizon extends. The damped trend variant (if selected) will produce more conservative long-run projections than a linear trend model.</p>
+<p><strong>Analysis:</strong> The above plots have taken the best ETS model based on performance on the test data, and forecasted the long values for each variable 9 quarters into the future. Prediction intervals widen the longer out we go due to unforeseeable shocks. Every model when looking at the confidence intervals and steepness of the forecast lines looks pretty consistent with the data as a whole, so Crawford and I are quite happy with these forecasts.</p>
 </section>
 </section>
 <section id="arima-modelling" class="level1" data-number="6">
 <h1 data-number="6"><span class="header-section-number">6</span> ARIMA Modelling</h1>
-<p>ARIMA models use lagged values and lagged errors to capture autocorrelation structure after differencing to achieve stationarity. The differencing order <code>d</code> is determined by unit root tests; seasonal differencing <code>D</code> is evaluated via AICc.</p>
+<p>ARIMA models use lagged values and lagged errors to capture autocorrelation structure after differencing to achieve stationarity. The differencing order of “d” is determined by unit root tests; seasonal differencing of “D” is evaluated by comparing AICc values.</p>
 <section id="unit-root-tests-and-differencing-diagnostics" class="level2" data-number="6.1">
 <h2 data-number="6.1" class="anchored" data-anchor-id="unit-root-tests-and-differencing-diagnostics"><span class="header-section-number">6.1</span> Unit Root Tests and Differencing Diagnostics</h2>
 <section id="acf-of-log-levels" class="level3" data-number="6.1.1">
@@ -833,10 +852,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> A slow, linear decay in the ACF is the hallmark of a non-stationary (unit root) process. All three series should show this pattern — confirming that <code>d ≥ 1</code> is needed before fitting ARIMA.</p>
+<p><strong>Analysis:</strong> A slow, linear decay in the ACF is the most obvious sign that the data needs to be transformed. The data is clearly non-stationary, especially since we saw at the very beginning a strong positive trend.</p>
 </section>
 <section id="kpss-tests-and-recommended-differencing-order" class="level3" data-number="6.1.2">
 <h3 data-number="6.1.2" class="anchored" data-anchor-id="kpss-tests-and-recommended-differencing-order"><span class="header-section-number">6.1.2</span> KPSS Tests and Recommended Differencing Order</h3>
+<p>KPSS tests being used below are another way we will be confirming whether our data is stationary for ARIMA use (as it’s required). KPSS tests assume a null hypothesis that the data is stationary and that no unit roots are present. We will again use a 0.05 threshold to determine if this criteria is met.</p>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -893,11 +913,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </table>
 </div>
 </div>
-<p><strong>Analysis:</strong> KPSS null is stationarity — a small p-value (&lt; 0.05) rejects stationarity and confirms differencing is needed. <code>ndiffs</code> will typically return 1 for all three series given the strong upward trends observed.</p>
+<p><strong>Analysis:</strong> From the KPSS table generated by R, every p-value for each of our logged variables is one, so not only do we reject the null hypothesis, but this confirms we must difference the data and test if the variables are stationary afterward. Moving to the unit root test table and differencing required, the table indicates we need to differentiate each logged variable once to have stationary data.</p>
 </section>
 <section id="acf-and-pacf-of-first-differenced-series" class="level3" data-number="6.1.3">
 <h3 data-number="6.1.3" class="anchored" data-anchor-id="acf-and-pacf-of-first-differenced-series"><span class="header-section-number">6.1.3</span> ACF and PACF of First-Differenced Series</h3>
-<p>After applying <code>d=1</code>, the ACF and PACF of the differenced series reveal the AR and MA orders.</p>
+<p>After applying one difference, the ACF and PACF of the differenced series reveal the AR and MA orders.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -921,45 +941,43 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> After first-differencing, the series should be approximately stationary. Read the ACF and PACF to inform manual model specs: - <strong>ACF cuts off at lag q, PACF decays</strong> → MA(q) process - <strong>PACF cuts off at lag p, ACF decays</strong> → AR(p) process - <strong>Both decay</strong> → ARMA(p,q) - <strong>Spikes at seasonal lags (4, 8, 12)</strong> → seasonal terms needed</p>
-<p>Check whether ACF at lag 4 is significant — if so, a seasonal MA term <code>PDQ(0,1,1)</code> is warranted.</p>
+<p><strong>Analysis:</strong> After first differencing, gg_tsdisplay plots indicate that our data is now stationary. The ACF plots of every differnced log variable have no values crossing the 95% boundary, and the PACF plots have no values that indicate an AR process needed. As such, we can now go forward, layout some ARIMA models, fit them to the test and training data, compare results, then forecast into the future.</p>
 </section>
 </section>
 <section id="fit-arima-specifications" class="level2" data-number="6.2">
 <h2 data-number="6.2" class="anchored" data-anchor-id="fit-arima-specifications"><span class="header-section-number">6.2</span> Fit ARIMA Specifications</h2>
-<p>Based on the ACF/PACF diagnostics above, three manual specifications are fit alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality.</p>
+<p>Based on the ACF/PACF diagnostics above, three manual specifications are fit alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality. The variety of models is to make sure that, in case some data wasn’t picked, we are covering our bases.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GDP</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>arima_fit_gdp <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_arima  =</span> <span class="fu">ARIMA</span>(log_gdp),</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011   =</span> <span class="fu">ARIMA</span>(log_gdp <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111   =</span> <span class="fu">ARIMA</span>(log_gdp <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011s  =</span> <span class="fu">ARIMA</span>(log_gdp <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>)),</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111s  =</span> <span class="fu">ARIMA</span>(log_gdp <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Domestic Demand</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>arima_fit_dd <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_arima  =</span> <span class="fu">ARIMA</span>(log_domestic_demand),</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011   =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111   =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011s  =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>)),</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111s  =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Imports</span></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>arima_fit_imp <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_arima  =</span> <span class="fu">ARIMA</span>(log_imports),</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011   =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111   =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011s  =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>)),</span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111s  =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GDP</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>arima_fit_gdp <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_arima  =</span> <span class="fu">ARIMA</span>(log_gdp),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011   =</span> <span class="fu">ARIMA</span>(log_gdp <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011s  =</span> <span class="fu">ARIMA</span>(log_gdp <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>)),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111s  =</span> <span class="fu">ARIMA</span>(log_gdp <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Domestic Demand</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>arima_fit_dd <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_arima  =</span> <span class="fu">ARIMA</span>(log_domestic_demand),</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011   =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111   =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011s  =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>)),</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111s  =</span> <span class="fu">ARIMA</span>(log_domestic_demand <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Imports</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>arima_fit_imp <span class="ot">&lt;-</span> us_train <span class="sc">%&gt;%</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">auto_arima  =</span> <span class="fu">ARIMA</span>(log_imports),</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011   =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111   =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)),</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_011s  =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>)),</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">arima_111s  =</span> <span class="fu">ARIMA</span>(log_imports <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">pdq</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">PDQ</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -988,16 +1006,11 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">-546.40</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left; font-weight: bold; color: rgba(26, 26, 46, 255) !important;">arima_111</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">-552.34</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">-542.57</td>
-</tr>
-<tr class="even">
 <td style="text-align: left; font-weight: bold; color: rgba(26, 26, 46, 255) !important;">arima_011s</td>
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">-514.65</td>
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">-505.07</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left; font-weight: bold; color: rgba(26, 26, 46, 255) !important;">arima_111s</td>
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">-491.84</td>
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">-479.99</td>
@@ -1084,10 +1097,7 @@ $ log_imports         &lt;dbl&gt; 12.93715, 12.96851, 13.00386, 13.00532, 12.992
 </table>
 </div>
 </div>
-<p><strong>Analysis:</strong> Note which model wins on AICc vs BIC — BIC penalises parameters more heavily so it tends to select simpler specifications. If the auto model wins, check what orders it selected via <code>report()</code>. Seasonal specs winning over non-seasonal ones would confirm the STL seasonal component is large enough to matter for ARIMA.</p>
-</section>
-<section id="auto-arima-model-report" class="level2" data-number="6.4">
-<h2 data-number="6.4" class="anchored" data-anchor-id="auto-arima-model-report"><span class="header-section-number">6.4</span> Auto-ARIMA Model Report</h2>
+<p><strong>Analysis:</strong> After laying out the different ARIMA model specifications, and then applying them to the US training data, we now have the results to see what models have fitted well. In every table, the lowest AICc model has been highlighted in yellow, which is R’s auto-selected model for each.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>Series: log_gdp 
@@ -1126,9 +1136,17 @@ sigma^2 estimated as 0.001087:  log likelihood=189.92
 AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 </div>
+<p>Using the report function, we get the following <strong>ARIMA specifications for log_gdp, log_dd, and log_imp respectively: ARIMA(0,1,1), ARIMA(0,1,0), and ARIMA(0,1,0)</strong>. Like before, the domestic demand and import variables share the same specifications like the ETS analysis.</p>
+<p>For all the logged variables with one difference, here the the specifications for each (GDP, DD, IMP):</p>
+<p>ARIMA(0,1,1) –&gt; AR(0), 1 difference, MA(1)</p>
+<p>ARIMA(0,1,0) –&gt; AR(0), 1 difference, MA(0)</p>
+<p>ARIMA(0,1,0) –&gt; AR(0), 1 difference, MA(0)</p>
 </section>
-<section id="arima-residual-diagnostics" class="level2" data-number="6.5">
-<h2 data-number="6.5" class="anchored" data-anchor-id="arima-residual-diagnostics"><span class="header-section-number">6.5</span> ARIMA Residual Diagnostics</h2>
+</section>
+<section id="auto-arima-model-report" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Auto-ARIMA Model Report</h1>
+<section id="arima-residual-diagnostics" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="arima-residual-diagnostics"><span class="header-section-number">7.1</span> ARIMA Residual Diagnostics</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1152,10 +1170,10 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> The 2020 Q2 COVID spike will dominate the residual time plot for all three variables. This is a structural break that differencing and ARIMA orders cannot absorb — it inflates residual variance and may push ACF spikes into significance at nearby lags. If ACF structure is primarily confined to the COVID period, the white-noise assumption is approximately satisfied for the rest of the sample. A formal outlier correction (intervention variable) is beyond the current scope.</p>
+<p><strong>Analysis:</strong> The 2020 COVID spike again shows up most prominently in the time plot, but all other plots are what we want for a stationary time series. The ACF plots of every auto-selected ARIMA model (by R) show no ACF values crossing the 95% boundary, and a normal distribution histogram of the values as well, indicating stationary time series data.</p>
 </section>
-<section id="ljung-box-test-on-arima-residuals" class="level2" data-number="6.6">
-<h2 data-number="6.6" class="anchored" data-anchor-id="ljung-box-test-on-arima-residuals"><span class="header-section-number">6.6</span> Ljung-Box Test on ARIMA Residuals</h2>
+<section id="ljung-box-test-on-arima-residuals" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="ljung-box-test-on-arima-residuals"><span class="header-section-number">7.2</span> Ljung-Box Test on ARIMA Residuals</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-bordered table-condensed caption-top table-sm small">
@@ -1187,9 +1205,10 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </table>
 </div>
 </div>
+<p><strong>Analysis:</strong> In all of our Ljung-Box tests for the first difference logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9396, 0.8730, and 0.4611 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation and that we can proceed with ARIMA model analysis.</p>
 </section>
-<section id="arima-forecast-on-test-set-2024-q1-2025-q4" class="level2" data-number="6.7">
-<h2 data-number="6.7" class="anchored" data-anchor-id="arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">6.7</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</h2>
+<section id="arima-forecast-on-test-set-2024-q1-2025-q4" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="arima-forecast-on-test-set-2024-q1-2025-q4"><span class="header-section-number">7.3</span> ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-bordered table-condensed caption-top table-sm small">
@@ -1278,14 +1297,6 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 <td style="text-align: right;">NaN</td>
 </tr>
 <tr class="even">
-<td style="text-align: left; font-weight: bold;">Log GDP</td>
-<td style="text-align: left; font-weight: bold;">arima_111</td>
-<td style="text-align: right; color: black !important;">0.0047</td>
-<td style="text-align: right;">0.0041</td>
-<td style="text-align: right;">0.0262</td>
-<td style="text-align: right;">NaN</td>
-</tr>
-<tr class="odd">
 <td style="text-align: left; font-weight: bold;">Log Imports</td>
 <td style="text-align: left; font-weight: bold;">arima_011</td>
 <td style="text-align: right; color: blue !important;">0.0411</td>
@@ -1293,7 +1304,7 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 <td style="text-align: right;">0.2140</td>
 <td style="text-align: right;">NaN</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left; font-weight: bold;">Log Imports</td>
 <td style="text-align: left; font-weight: bold;">arima_111</td>
 <td style="text-align: right; color: black !important;">0.0412</td>
@@ -1301,7 +1312,7 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 <td style="text-align: right;">0.2150</td>
 <td style="text-align: right;">NaN</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left; font-weight: bold;">Log Imports</td>
 <td style="text-align: left; font-weight: bold;">auto_arima</td>
 <td style="text-align: right; color: black !important;">0.0415</td>
@@ -1309,7 +1320,7 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 <td style="text-align: right;">0.2168</td>
 <td style="text-align: right;">NaN</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left; font-weight: bold;">Log Imports</td>
 <td style="text-align: left; font-weight: bold;">arima_011s</td>
 <td style="text-align: right; color: black !important;">0.0477</td>
@@ -1317,7 +1328,7 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 <td style="text-align: right;">0.2556</td>
 <td style="text-align: right;">NaN</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left; font-weight: bold;">Log Imports</td>
 <td style="text-align: left; font-weight: bold;">arima_111s</td>
 <td style="text-align: right; color: black !important;">0.0517</td>
@@ -1329,6 +1340,7 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </table>
 </div>
 </div>
+<p>Now we take all our ARIMA models after apply to training data, and applying them to the test data to determine what specifications will be best for forecasting future values. With the r code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For differenced log domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1352,10 +1364,10 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Compare ARIMA forecast accuracy to ETS from the prior section. ARIMA typically handles short-run autocorrelation structure better, while ETS handles trends more smoothly. Imports is the most challenging — higher remainder variance from the STL decomposition translates into wider prediction intervals and higher RMSE.</p>
+<p><strong>Analysis:</strong> Above is the forecasts of the ARIMA models on the test data, and we see the results of our best performing ARIMA models for each variable in the plots above. In each of the forecasts, the 95% and 80% confidence intervals all contain the real data, and the ARIMA model forecasts. Each forecast is close to the actual data, so our ARIMA specifications have worked quite well. Like the previous ETS modeling on the test data with logged imports, the spike in the test data is barely contained in the 80% confidence interval.</p>
 </section>
-<section id="arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="6.8">
-<h2 data-number="6.8" class="anchored" data-anchor-id="arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">6.8</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
+<section id="arima-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="arima-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">7.4</span> ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1379,39 +1391,39 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Forward forecasts from the full-data ARIMA reflect both the long-run trend and any seasonal pattern captured in the selected specification. Compare the trajectory and interval width against the ETS forward forecasts in the prior section.</p>
+<p><strong>Analysis:</strong> All of these forecasts for future values use the best specification that performed well on the test data, which in this case is R’s auto-selected ARIMA for GDP and domestic demand, and ARIMA(0,1,1) for improts. So far, these ARIMA model forecasts look very similar to the ETS forecasts, including the logged import forecast values.</p>
 </section>
 </section>
-<section id="var-modelling" class="level1" data-number="7">
-<h1 data-number="7"><span class="header-section-number">7</span> VAR Modelling</h1>
+<section id="var-modelling" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> VAR Modelling</h1>
 <p>VAR (Vector Autoregression) jointly models all three variables as a system, allowing each variable’s forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that univariate ETS and ARIMA cannot.</p>
-<p>VAR requires <strong>stationary</strong> inputs. Because all three log series have unit roots (<code>d=1</code>), we work with first-differenced log series. An alternative cointegration framework (VECM) is beyond the scope of this project.</p>
-<section id="prepare-differenced-data" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="prepare-differenced-data"><span class="header-section-number">7.1</span> Prepare Differenced Data</h2>
+<p>VAR requires <strong>stationary</strong> inputs. Because all three log series have unit roots (difference = 1), we work with first-differenced log series.</p>
+<section id="prepare-differenced-data" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="prepare-differenced-data"><span class="header-section-number">8.1</span> Prepare Differenced Data</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>us_clean_diff <span class="ot">&lt;-</span> us_clean <span class="sc">%&gt;%</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">d_log_gdp     =</span> <span class="fu">difference</span>(log_gdp),</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">d_log_dd      =</span> <span class="fu">difference</span>(log_domestic_demand),</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">d_log_imports =</span> <span class="fu">difference</span>(log_imports)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(d_log_gdp))</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>us_train_diff <span class="ot">&lt;-</span> us_clean_diff <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">&lt;=</span> <span class="fu">yearquarter</span>(<span class="st">"2023 Q4"</span>))</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>us_test_diff  <span class="ot">&lt;-</span> us_clean_diff <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">&gt;=</span> <span class="fu">yearquarter</span>(<span class="st">"2024 Q1"</span>))</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove tsibble key for vars package compatibility</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>train_mat <span class="ot">&lt;-</span> us_train_diff <span class="sc">%&gt;%</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(d_log_gdp, d_log_dd, d_log_imports) <span class="sc">%&gt;%</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.matrix</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>us_clean_diff <span class="ot">&lt;-</span> us_clean <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">d_log_gdp     =</span> <span class="fu">difference</span>(log_gdp),</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">d_log_dd      =</span> <span class="fu">difference</span>(log_domestic_demand),</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">d_log_imports =</span> <span class="fu">difference</span>(log_imports)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(d_log_gdp))</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>us_train_diff <span class="ot">&lt;-</span> us_clean_diff <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">&lt;=</span> <span class="fu">yearquarter</span>(<span class="st">"2023 Q4"</span>))</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>us_test_diff  <span class="ot">&lt;-</span> us_clean_diff <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">&gt;=</span> <span class="fu">yearquarter</span>(<span class="st">"2024 Q1"</span>))</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove tsibble key for vars package compatibility</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>train_mat <span class="ot">&lt;-</span> us_train_diff <span class="sc">%&gt;%</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(d_log_gdp, d_log_dd, d_log_imports) <span class="sc">%&gt;%</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.matrix</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
-<section id="stationarity-check-on-differenced-series" class="level2" data-number="7.2">
-<h2 data-number="7.2" class="anchored" data-anchor-id="stationarity-check-on-differenced-series"><span class="header-section-number">7.2</span> Stationarity Check on Differenced Series</h2>
+<section id="stationarity-check-on-differenced-series" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="stationarity-check-on-differenced-series"><span class="header-section-number">8.2</span> Stationarity Check on Differenced Series</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -1443,10 +1455,10 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </table>
 </div>
 </div>
-<p><strong>Analysis:</strong> P-values well above 0.05 confirm the differenced series are stationary and appropriate as VAR inputs. If any series still fails, apply a second difference (<code>d=2</code>) to that variable only.</p>
+<p><strong>Analysis:</strong> All our p-values are P-values are well above 0.05, so we fail to reject the null hypothesis that our data is stationary. We do not need a second difference according to the KPSS and p-value, so we can proceed on analysis.</p>
 </section>
-<section id="acf-of-differenced-series" class="level2" data-number="7.3">
-<h2 data-number="7.3" class="anchored" data-anchor-id="acf-of-differenced-series"><span class="header-section-number">7.3</span> ACF of Differenced Series</h2>
+<section id="acf-of-differenced-series" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="acf-of-differenced-series"><span class="header-section-number">8.3</span> ACF of Differenced Series</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1470,15 +1482,18 @@ AIC=-375.84   AICc=-375.71   BIC=-370.73</code></pre>
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Remaining ACF structure in the differenced series — especially at seasonal lags 4 and 8 — informs how many lags <code>p</code> are needed in the VAR. Significant spikes at multiple lags suggest a higher-order VAR (p=2 or p=4) may be needed.</p>
+<p><strong>Analysis:</strong> Setting the lag amount to 16 and generating an ACF plot for each variable, we see that the differenced and logged variables have no ACF values cross the 95% boundary. This is again a confirmation that our data is stationary, and that we may proceed on analysis.</p>
 </section>
-<section id="var-lag-selection" class="level2" data-number="7.4">
-<h2 data-number="7.4" class="anchored" data-anchor-id="var-lag-selection"><span class="header-section-number">7.4</span> VAR Lag Selection</h2>
+<section id="var-lag-selection" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="var-lag-selection"><span class="header-section-number">8.4</span> VAR Lag Selection</h2>
+<p>In this code chunk, R is performing a VAR lag selection for a multivariate time series, fitting lags with lengths 1 to 6, including a constant term, and through AIC, HQ, SC, and FPE, deciding what the best lag would be under each model.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>lag_select <span class="ot">&lt;-</span> <span class="fu">VARselect</span>(train_mat, <span class="at">lag.max =</span> <span class="dv">6</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>lag_select<span class="sc">$</span>criteria</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AI here helping to code, and give insight to how we as a group can interpret the results</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>lag_select <span class="ot">&lt;-</span> <span class="fu">VARselect</span>(train_mat, <span class="at">lag.max =</span> <span class="dv">6</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>lag_select<span class="sc">$</span>criteria</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>                   1             2             3             4             5
@@ -1494,26 +1509,30 @@ FPE(n)  1.607620e-13</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>lag_select<span class="sc">$</span>selection</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>lag_select<span class="sc">$</span>selection</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>AIC(n)  HQ(n)  SC(n) FPE(n) 
      2      1      1      2 </code></pre>
 </div>
 </div>
-<p><strong>Analysis:</strong> <code>VARselect</code> returns four information criteria (AIC, HQ, SC/BIC, FPE). SC (Schwarz/BIC) typically selects the most parsimonious lag; AIC selects the most flexible. Note the recommended lag from each criterion — the most common choice across criteria is a reasonable default. With quarterly data, <code>p=4</code> captures one full year of lags.</p>
+<p><strong>Analysis:</strong> AIC and FPE are the most flexible according to AI, however since our goal is to forecast and AIC is the most familiar to us, we will be using 2 lags in our specifications. The other methods, HQ and SC, are more punative like BIC in order to create more stable models.</p>
+<p><strong>Note by AI:</strong> The recommended lag from each criterion — the most common choice across criteria is a reasonable default. With quarterly data, <code>p=4</code> captures one full year of lags.</p>
 </section>
-<section id="fit-var-specifications-vars-package" class="level2" data-number="7.5">
-<h2 data-number="7.5" class="anchored" data-anchor-id="fit-var-specifications-vars-package"><span class="header-section-number">7.5</span> Fit VAR Specifications (vars package)</h2>
+<section id="fit-var-specifications-vars-package" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="fit-var-specifications-vars-package"><span class="header-section-number">8.5</span> Fit VAR Specifications (vars package)</h2>
+<p>Below, using the vars package, we can observe the specifications using different lags from the previous code chunk’s table. For our purposes, we are looking at the VAR of the training data with the model, with lag 2.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>var_p1 <span class="ot">&lt;-</span> <span class="fu">VAR</span>(train_mat, <span class="at">p =</span> <span class="dv">1</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>var_p2 <span class="ot">&lt;-</span> <span class="fu">VAR</span>(train_mat, <span class="at">p =</span> <span class="dv">2</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>var_p4 <span class="ot">&lt;-</span> <span class="fu">VAR</span>(train_mat, <span class="at">p =</span> <span class="dv">4</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of recommended lag order (adjust based on VARselect above)</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(var_p1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AI was used to help code in VAR specifications</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>var_p1 <span class="ot">&lt;-</span> <span class="fu">VAR</span>(train_mat, <span class="at">p =</span> <span class="dv">2</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>var_p2 <span class="ot">&lt;-</span> <span class="fu">VAR</span>(train_mat, <span class="at">p =</span> <span class="dv">2</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>var_p4 <span class="ot">&lt;-</span> <span class="fu">VAR</span>(train_mat, <span class="at">p =</span> <span class="dv">2</span>, <span class="at">type =</span> <span class="st">"const"</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of recommended lag order (adjust based on VARselect above)</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(var_p2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -1521,87 +1540,98 @@ VAR Estimation Results:
 ========================= 
 Endogenous variables: d_log_gdp, d_log_dd, d_log_imports 
 Deterministic variables: const 
-Sample size: 94 
-Log Likelihood: 1008.335 
+Sample size: 93 
+Log Likelihood: 1007.452 
 Roots of the characteristic polynomial:
-0.218 0.218 0.1732
+0.5877 0.5054 0.5054 0.432 0.432 0.4114
 Call:
-VAR(y = train_mat, p = 1, type = "const")
+VAR(y = train_mat, p = 2, type = "const")
 
 
 Estimation results for equation d_log_gdp: 
 ========================================== 
-d_log_gdp = d_log_gdp.l1 + d_log_dd.l1 + d_log_imports.l1 + const 
+d_log_gdp = d_log_gdp.l1 + d_log_dd.l1 + d_log_imports.l1 + d_log_gdp.l2 + d_log_dd.l2 + d_log_imports.l2 + const 
 
                   Estimate Std. Error t value Pr(&gt;|t|)    
-d_log_gdp.l1     -1.959637   0.672637  -2.913 0.004509 ** 
-d_log_dd.l1       1.908437   0.768359   2.484 0.014851 *  
-d_log_imports.l1 -0.074666   0.094358  -0.791 0.430846    
-const             0.005801   0.001439   4.031 0.000116 ***
+d_log_gdp.l1     -1.554991   0.694569  -2.239   0.0278 *  
+d_log_dd.l1       1.279521   0.829711   1.542   0.1267    
+d_log_imports.l1 -0.004241   0.108199  -0.039   0.9688    
+d_log_gdp.l2     -1.599418   0.745502  -2.145   0.0347 *  
+d_log_dd.l2       1.518425   0.831637   1.826   0.0713 .  
+d_log_imports.l2 -0.021330   0.097109  -0.220   0.8267    
+const             0.006915   0.001686   4.102 9.27e-05 ***
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 
-Residual standard error: 0.01251 on 90 degrees of freedom
-Multiple R-Squared: 0.1079, Adjusted R-squared: 0.07819 
-F-statistic:  3.63 on 3 and 90 DF,  p-value: 0.01592 
+Residual standard error: 0.0124 on 86 degrees of freedom
+Multiple R-Squared: 0.1623, Adjusted R-squared: 0.1039 
+F-statistic: 2.777 on 6 and 86 DF,  p-value: 0.01622 
 
 
 Estimation results for equation d_log_dd: 
 ========================================= 
-d_log_dd = d_log_gdp.l1 + d_log_dd.l1 + d_log_imports.l1 + const 
+d_log_dd = d_log_gdp.l1 + d_log_dd.l1 + d_log_imports.l1 + d_log_gdp.l2 + d_log_dd.l2 + d_log_imports.l2 + const 
 
                   Estimate Std. Error t value Pr(&gt;|t|)    
-d_log_gdp.l1     -2.206843   0.684860  -3.222 0.001771 ** 
-d_log_dd.l1       2.178573   0.782321   2.785 0.006530 ** 
-d_log_imports.l1 -0.082754   0.096073  -0.861 0.391323    
-const             0.005832   0.001465   3.981 0.000139 ***
+d_log_gdp.l1     -1.797381   0.709767  -2.532 0.013146 *  
+d_log_dd.l1       1.544063   0.847866   1.821 0.072067 .  
+d_log_imports.l1 -0.011700   0.110567  -0.106 0.915970    
+d_log_gdp.l2     -1.618954   0.761815  -2.125 0.036445 *  
+d_log_dd.l2       1.599898   0.849834   1.883 0.063136 .  
+d_log_imports.l2 -0.045974   0.099234  -0.463 0.644327    
+const             0.006781   0.001723   3.936 0.000167 ***
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 
-Residual standard error: 0.01274 on 90 degrees of freedom
-Multiple R-Squared: 0.1212, Adjusted R-squared: 0.09187 
-F-statistic: 4.136 on 3 and 90 DF,  p-value: 0.008531 
+Residual standard error: 0.01267 on 86 degrees of freedom
+Multiple R-Squared: 0.1695, Adjusted R-squared: 0.1115 
+F-statistic: 2.924 on 6 and 86 DF,  p-value: 0.01208 
 
 
 Estimation results for equation d_log_imports: 
 ============================================== 
-d_log_imports = d_log_gdp.l1 + d_log_dd.l1 + d_log_imports.l1 + const 
+d_log_imports = d_log_gdp.l1 + d_log_dd.l1 + d_log_imports.l1 + d_log_gdp.l2 + d_log_dd.l2 + d_log_imports.l2 + const 
 
                   Estimate Std. Error t value Pr(&gt;|t|)  
-d_log_gdp.l1     -3.596710   1.746816  -2.059   0.0424 *
-d_log_dd.l1       3.637684   1.995403   1.823   0.0716 .
-d_log_imports.l1  0.012053   0.245045   0.049   0.9609  
-const             0.006826   0.003737   1.827   0.0711 .
+d_log_gdp.l1     -2.657565   1.816540  -1.463   0.1471  
+d_log_dd.l1       1.963110   2.169983   0.905   0.3682  
+d_log_imports.l1  0.268167   0.282979   0.948   0.3460  
+d_log_gdp.l2     -3.046578   1.949747  -1.563   0.1218  
+d_log_dd.l2       2.863766   2.175021   1.317   0.1915  
+d_log_imports.l2 -0.144075   0.253974  -0.567   0.5720  
+const             0.010315   0.004409   2.339   0.0216 *
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 
-Residual standard error: 0.03249 on 90 degrees of freedom
-Multiple R-Squared: 0.06376,    Adjusted R-squared: 0.03255 
-F-statistic: 2.043 on 3 and 90 DF,  p-value: 0.1135 
+Residual standard error: 0.03242 on 86 degrees of freedom
+Multiple R-Squared: 0.1025, Adjusted R-squared: 0.03984 
+F-statistic: 1.636 on 6 and 86 DF,  p-value: 0.1469 
 
 
 
 Covariance matrix of residuals:
               d_log_gdp  d_log_dd d_log_imports
-d_log_gdp     0.0001565 0.0001570     0.0003477
-d_log_dd      0.0001570 0.0001623     0.0003745
-d_log_imports 0.0003477 0.0003745     0.0010558
+d_log_gdp     0.0001537 0.0001547     0.0003462
+d_log_dd      0.0001547 0.0001605     0.0003742
+d_log_imports 0.0003462 0.0003742     0.0010511
 
 Correlation matrix of residuals:
               d_log_gdp d_log_dd d_log_imports
-d_log_gdp        1.0000   0.9850        0.8552
-d_log_dd         0.9850   1.0000        0.9047
-d_log_imports    0.8552   0.9047        1.0000</code></pre>
+d_log_gdp        1.0000   0.9848        0.8613
+d_log_dd         0.9848   1.0000        0.9112
+d_log_imports    0.8613   0.9112        1.0000</code></pre>
 </div>
 </div>
+<p><strong>Crawford verify this interpretation:</strong> The VAR(2) model is dynamically stable with all characteristic roots below 1.0. In the GDP and domestic demand equations, lags are significantly negative, lagged domestic demand positively predicts GDP, and the constants are highly significant at ~0.69% and ~0.68% quarterly growth respectively. The imports equation is weakest with no lag being significant and the joint F-test fails (p = 0.147), suggesting imports behave as exogenous to the system. Most notably, residual correlations are extremely high (0.985 between GDP and domestic demand, 0.86–0.91 with imports), indicating the three variables are driven by a common trend.</p>
 </section>
-<section id="var-residual-diagnostics" class="level2" data-number="7.6">
-<h2 data-number="7.6" class="anchored" data-anchor-id="var-residual-diagnostics"><span class="header-section-number">7.6</span> VAR Residual Diagnostics</h2>
-<section id="portmanteau-serial-correlation-test" class="level3" data-number="7.6.1">
-<h3 data-number="7.6.1" class="anchored" data-anchor-id="portmanteau-serial-correlation-test"><span class="header-section-number">7.6.1</span> Portmanteau Serial Correlation Test</h3>
+<section id="var-residual-diagnostics" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="var-residual-diagnostics"><span class="header-section-number">8.6</span> VAR Residual Diagnostics</h2>
+<section id="portmanteau-serial-correlation-test-broader-version-of-box-pierce-and-ljung-box-tests" class="level3" data-number="8.6.1">
+<h3 data-number="8.6.1" class="anchored" data-anchor-id="portmanteau-serial-correlation-test-broader-version-of-box-pierce-and-ljung-box-tests"><span class="header-section-number">8.6.1</span> Portmanteau Serial Correlation Test (Broader version of Box-Pierce and Ljung-Box Tests)</h3>
+<p>Portmanteau Serial Correlation Test is a broader version of the Box-Pierce and Ljung-Box Test, testing for stationary data series. The null hypothesis is that the data has no series correlation (no autocorrelation), and that there is no data remaining in the errors to be extracted.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>--- VAR(1) Portmanteau Test ---</code></pre>
@@ -1611,7 +1641,7 @@ d_log_imports    0.8552   0.9047        1.0000</code></pre>
     Portmanteau Test (asymptotic)
 
 data:  Residuals of VAR object var_p1
-Chi-squared = 112.19, df = 81, p-value = 0.01245</code></pre>
+Chi-squared = 89.739, df = 72, p-value = 0.07689</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>--- VAR(2) Portmanteau Test ---</code></pre>
@@ -1631,13 +1661,13 @@ Chi-squared = 89.739, df = 72, p-value = 0.07689</code></pre>
     Portmanteau Test (asymptotic)
 
 data:  Residuals of VAR object var_p4
-Chi-squared = 65.192, df = 54, p-value = 0.1415</code></pre>
+Chi-squared = 89.739, df = 72, p-value = 0.07689</code></pre>
 </div>
 </div>
-<p><strong>Analysis:</strong> The Portmanteau test evaluates whether the VAR residuals are jointly white noise across all equations. A p-value &gt; 0.05 indicates no remaining serial correlation. If VAR(1) fails but VAR(2) or VAR(4) passes, the higher lag order is the appropriate choice.</p>
+<p><strong>Analysis:</strong> The Portmanteau test evaluates whether the VAR residuals are jointly white noise across all equations. A p-value &gt; 0.05 indicates no remaining serial correlation. Based on the results of the Portmanteau Test a lag of 1 failed the test having a p-value of 0.01245 which is less than 0.05, so we reject the null hypothesis. For lags of 2 and 4, both p-values of 0.07689 and 0.1415 are greater than 0.05. This means our data has no remaining serial correlation, and we can continue our analysis.</p>
 </section>
-<section id="gg_tsresiduals-on-var-residuals" class="level3" data-number="7.6.2">
-<h3 data-number="7.6.2" class="anchored" data-anchor-id="gg_tsresiduals-on-var-residuals"><span class="header-section-number">7.6.2</span> gg_tsresiduals on VAR Residuals</h3>
+<section id="gg_tsresiduals-on-var-residuals" class="level3" data-number="8.6.2">
+<h3 data-number="8.6.2" class="anchored" data-anchor-id="gg_tsresiduals-on-var-residuals"><span class="header-section-number">8.6.2</span> gg_tsresiduals on VAR Residuals</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1661,44 +1691,46 @@ Chi-squared = 65.192, df = 54, p-value = 0.1415</code></pre>
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> These plots isolate each equation’s residuals. The 2020 Q2 spike will dominate the time plot. Check ACF panels for remaining structure — any systematic spike at lag 4 would suggest seasonal dynamics are not absorbed even with the differencing applied. The histogram should be roughly symmetric; heavy tails are expected due to the COVID outlier.</p>
+<p><strong>Analysis:</strong> These plots isolate each equation’s variable residuals. Again, like previous gg_tsresiduals plots our time series data clearly shows the COVID-19 shock but our data continues hovering around the mean of 0. All ACF plots for every variable have ACF values within the 95% boundary, so no autocorrelation to remove. The distribution of residuals is also normal, with clear outliers most likely from the COVID pandemic data.</p>
 </section>
 </section>
-<section id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="level2" data-number="7.7">
-<h2 data-number="7.7" class="anchored" data-anchor-id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">7.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</h2>
+<section id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline" class="level2" data-number="8.7">
+<h2 data-number="8.7" class="anchored" data-anchor-id="fit-var-via-fable-for-aiccbic-and-forecast-pipeline"><span class="header-section-number">8.7</span> Fit VAR via fable (for AICc/BIC and forecast pipeline)</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Unkey the tsibble for fable VAR (requires single index, no key)</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>us_train_diff_unkeyed <span class="ot">&lt;-</span> us_train_diff <span class="sc">%&gt;%</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> date)</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>fit_var <span class="ot">&lt;-</span> us_train_diff_unkeyed <span class="sc">%&gt;%</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">var_aicc =</span> fable<span class="sc">::</span><span class="fu">VAR</span>(<span class="fu">vars</span>(d_log_gdp, d_log_dd, d_log_imports)),</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">var_bic  =</span> fable<span class="sc">::</span><span class="fu">VAR</span>(<span class="fu">vars</span>(d_log_gdp, d_log_dd, d_log_imports), <span class="at">ic =</span> <span class="st">"bic"</span>)</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="fu">glance</span>(fit_var) <span class="sc">%&gt;%</span></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">format  =</span> <span class="st">"html"</span>,</span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"VAR Model Fit Statistics (fable)"</span>,</span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">digits  =</span> <span class="dv">2</span></span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>(</span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>),</span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">full_width        =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">position          =</span> <span class="st">"left"</span>,</span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">font_size         =</span> <span class="dv">13</span></span>
-<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">row_spec</span>(<span class="dv">0</span>,</span>
-<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>                       <span class="at">bold       =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>                       <span class="at">color      =</span> <span class="st">"#1a1a2e"</span>,</span>
-<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>                       <span class="at">background =</span> <span class="st">"#e8f5e9"</span>   <span class="co"># soft green</span></span>
-<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">column_spec</span>(<span class="dv">1</span>, <span class="at">bold =</span> <span class="cn">TRUE</span>, <span class="at">color =</span> <span class="st">"#1a1a2e"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">column_spec</span>(<span class="dv">2</span><span class="sc">:</span><span class="fu">ncol</span>(<span class="fu">glance</span>(fit_var)), <span class="at">color =</span> <span class="st">"#2c2c2c"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AI used to help code in the AICc/BIC testing of the VAR</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Unkey the tsibble for fable VAR (requires single index, no key)</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>us_train_diff_unkeyed <span class="ot">&lt;-</span> us_train_diff <span class="sc">%&gt;%</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> date)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>fit_var <span class="ot">&lt;-</span> us_train_diff_unkeyed <span class="sc">%&gt;%</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">var_aicc =</span> fable<span class="sc">::</span><span class="fu">VAR</span>(<span class="fu">vars</span>(d_log_gdp, d_log_dd, d_log_imports)),</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">var_bic  =</span> fable<span class="sc">::</span><span class="fu">VAR</span>(<span class="fu">vars</span>(d_log_gdp, d_log_dd, d_log_imports), <span class="at">ic =</span> <span class="st">"bic"</span>)</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="fu">glance</span>(fit_var) <span class="sc">%&gt;%</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">format  =</span> <span class="st">"html"</span>,</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"VAR Model Fit Statistics (fable)"</span>,</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">digits  =</span> <span class="dv">2</span></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">kable_styling</span>(</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>),</span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">full_width        =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">position          =</span> <span class="st">"left"</span>,</span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">font_size         =</span> <span class="dv">13</span></span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">row_spec</span>(<span class="dv">0</span>,</span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>                       <span class="at">bold       =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>                       <span class="at">color      =</span> <span class="st">"#1a1a2e"</span>,</span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>                       <span class="at">background =</span> <span class="st">"#e8f5e9"</span>   <span class="co"># soft green</span></span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">column_spec</span>(<span class="dv">1</span>, <span class="at">bold =</span> <span class="cn">TRUE</span>, <span class="at">color =</span> <span class="st">"#1a1a2e"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a>  kableExtra<span class="sc">::</span><span class="fu">column_spec</span>(<span class="dv">2</span><span class="sc">:</span><span class="fu">ncol</span>(<span class="fu">glance</span>(fit_var)), <span class="at">color =</span> <span class="st">"#2c2c2c"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -1734,9 +1766,10 @@ Chi-squared = 65.192, df = 54, p-value = 0.1415</code></pre>
 </table>
 </div>
 </div>
+<p><strong>Analysis:</strong> With the var_aicc and var_bic models, both share the exact same log_lik, AIC, AICc, and BIC values. Both the AICc and BIC values are extremely small and negative, so we should be good with the var specifications we have established such as the lag of 2.</p>
 </section>
-<section id="var-forecast-on-test-set-differenced-log-scale" class="level2" data-number="7.8">
-<h2 data-number="7.8" class="anchored" data-anchor-id="var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">7.8</span> VAR Forecast on Test Set — Differenced Log Scale</h2>
+<section id="var-forecast-on-test-set-differenced-log-scale" class="level2" data-number="8.8">
+<h2 data-number="8.8" class="anchored" data-anchor-id="var-forecast-on-test-set-differenced-log-scale"><span class="header-section-number">8.8</span> VAR Forecast on Test Set — Differenced Log Scale</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -1792,10 +1825,10 @@ distributional 0.6.0.
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. Note whether the VAR’s cross-variable information (e.g., lagged GDP informing the imports equation) produces meaningfully different forecasts from the univariate ARIMA.</p>
+<p><strong>Analysis:</strong> VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that’s a good sign. Unlike the ETS and ARIMA analysis previosly, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph an values fluctuate more than the GDP and domestic demand values.</p>
 </section>
-<section id="var-forecast-on-test-set-back-transformed-to-levels" class="level2" data-number="7.9">
-<h2 data-number="7.9" class="anchored" data-anchor-id="var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">7.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</h2>
+<section id="var-forecast-on-test-set-back-transformed-to-levels" class="level2" data-number="8.9">
+<h2 data-number="8.9" class="anchored" data-anchor-id="var-forecast-on-test-set-back-transformed-to-levels"><span class="header-section-number">8.9</span> VAR Forecast on Test Set — Back-Transformed to Levels</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1805,12 +1838,12 @@ distributional 0.6.0.
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Back-transformation via cumulative sum converts quarter-over-quarter log growth forecasts back to log level paths. This is more economically interpretable — the distance between the blue forecast line and the red actual points is the forecast error on the log level scale, approximately equal to the percentage error. Note whether errors accumulate over the 8-quarter horizon (a sign of drift in the differenced forecasts).</p>
+<p><strong>Analysis:</strong> Back-transformation via cumulative sum converts quarter-over-quarter log growth forecasts back to log level values. This is more economically interpretable as the distance between the blue forecast line and the red actual points is the forecast error on the log level scale. This forecast error on the log level scale is approximately equal to the percentage error. Like the previous code chunk with a differenced log scale, the GDP and domestic demand forecasts (dark cyan lines) do quite well fitting the test data, but the logged imports forecast continues to have a big error in fitting the data.</p>
 </section>
-<section id="var-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="7.10">
-<h2 data-number="7.10" class="anchored" data-anchor-id="var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">7.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
-<section id="differenced-log-scale" class="level3" data-number="7.10.1">
-<h3 data-number="7.10.1" class="anchored" data-anchor-id="differenced-log-scale"><span class="header-section-number">7.10.1</span> Differenced Log Scale</h3>
+<section id="var-forecast-beyond-last-observation-2026-q1-2027-q4" class="level2" data-number="8.10">
+<h2 data-number="8.10" class="anchored" data-anchor-id="var-forecast-beyond-last-observation-2026-q1-2027-q4"><span class="header-section-number">8.10</span> VAR Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)</h2>
+<section id="differenced-log-scale" class="level3" data-number="8.10.1">
+<h3 data-number="8.10.1" class="anchored" data-anchor-id="differenced-log-scale"><span class="header-section-number">8.10.1</span> Differenced Log Scale</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1820,9 +1853,10 @@ distributional 0.6.0.
 </div>
 </div>
 </div>
+<p>The VAR(2) model forecasts all three series of US GDP, domestic demand, and imports going to near-zero first-difference log growth through 2027 Q4, which in levels translates to <strong>slow but stable positive growth</strong>. The lag 2 structure which should have been implamented means the model is capturing up to two quarters of backward momentum. The imports panel has the widest prediction interval due to trade being highly volatile relative to GDP during demand shocks.</p>
 </section>
-<section id="back-transformed-to-log-levels" class="level3" data-number="7.10.2">
-<h3 data-number="7.10.2" class="anchored" data-anchor-id="back-transformed-to-log-levels"><span class="header-section-number">7.10.2</span> Back-Transformed to Log Levels</h3>
+<section id="back-transformed-to-log-levels" class="level3" data-number="8.10.2">
+<h3 data-number="8.10.2" class="anchored" data-anchor-id="back-transformed-to-log-levels"><span class="header-section-number">8.10.2</span> Back-Transformed to Log Levels</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -1832,14 +1866,14 @@ distributional 0.6.0.
 </div>
 </div>
 </div>
-<p><strong>Analysis:</strong> Forward-looking VAR forecasts in level space allow direct comparison to the ETS and ARIMA forward forecasts. All three models should imply continued moderate growth — the key differences will be in the slope (growth rate) and any cross-variable dynamics the VAR captures that the univariate models miss.</p>
+<p><strong>Analysis:</strong> These forecasts of future values will be what we use to directly compare to the ETS and ARIMA forward forecasts. All three models show some moderate growth, the major differences being the slope (growth rate) and multivariable relaitonships that the Vector Autoregression (VAR) model catches.</p>
 </section>
 </section>
 </section>
-<section id="model-comparison-and-selection" class="level1" data-number="8">
-<h1 data-number="8"><span class="header-section-number">8</span> Model Comparison and Selection</h1>
-<section id="unified-accuracy-table-best-models-across-all-methods" class="level2" data-number="8.1">
-<h2 data-number="8.1" class="anchored" data-anchor-id="unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">8.1</span> Unified Accuracy Table: Best Models Across All Methods</h2>
+<section id="model-comparison-and-selection" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Model Comparison and Selection</h1>
+<section id="unified-accuracy-table-best-models-across-all-methods" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="unified-accuracy-table-best-models-across-all-methods"><span class="header-section-number">9.1</span> Unified Accuracy Table: Best Models Across All Methods</h2>
 <div class="cell">
 <div class="cell-output-display">
 <table class="table table-striped table-hover table-condensed caption-top table-sm small">
@@ -1866,9 +1900,9 @@ distributional 0.6.0.
 <tr class="even">
 <td style="text-align: left; font-weight: bold; color: rgba(26, 26, 46, 255) !important;">Log Domestic Demand</td>
 <td style="text-align: left; color: rgba(44, 44, 44, 255) !important;">ETS</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0057</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0047</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0300</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0055</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0045</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0287</td>
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">NaN</td>
 </tr>
 <tr class="odd">
@@ -1889,18 +1923,18 @@ distributional 0.6.0.
 </tr>
 <tr class="odd">
 <td style="text-align: left; font-weight: bold; color: rgba(26, 26, 46, 255) !important;">Log Imports</td>
-<td style="text-align: left; color: rgba(44, 44, 44, 255) !important;">ARIMA</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0415</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0299</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.2168</td>
+<td style="text-align: left; color: rgba(44, 44, 44, 255) !important;">ETS</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0396</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0292</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.2118</td>
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">NaN</td>
 </tr>
 <tr class="even">
 <td style="text-align: left; font-weight: bold; color: rgba(26, 26, 46, 255) !important;">Log Imports</td>
-<td style="text-align: left; color: rgba(44, 44, 44, 255) !important;">ETS</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0426</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0303</td>
-<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.2199</td>
+<td style="text-align: left; color: rgba(44, 44, 44, 255) !important;">ARIMA</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0411</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.0295</td>
+<td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">0.2140</td>
 <td style="text-align: right; color: rgba(44, 44, 44, 255) !important;">NaN</td>
 </tr>
 </tbody>
@@ -1951,8 +1985,8 @@ distributional 0.6.0.
 <p><strong>Note:</strong> VAR accuracy is measured on the differenced log scale while ETS and ARIMA are on the log level scale — RMSE values are not directly comparable across methods. Within each variable, compare ETS vs ARIMA (same scale). The VAR comparison is informative for understanding the differenced growth forecast quality separately.</p>
 <p><strong>Analysis:</strong> For each variable, identify which method achieves the lowest RMSE and lowest MAPE on the test set. If ETS wins on one criterion and ARIMA on another, both can be retained as “well-fitting” models for the final forward forecast. The VAR’s value is in capturing joint dynamics across variables rather than minimising univariate forecast error.</p>
 </section>
-<section id="final-model-selection-summary" class="level2" data-number="8.2">
-<h2 data-number="8.2" class="anchored" data-anchor-id="final-model-selection-summary"><span class="header-section-number">8.2</span> Final Model Selection Summary</h2>
+<section id="final-model-selection-summary" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="final-model-selection-summary"><span class="header-section-number">9.2</span> Final Model Selection Summary</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 25%">
@@ -1992,8 +2026,8 @@ distributional 0.6.0.
 <p><strong>Note:</strong> Fill in this table after rendering based on your AICc tables and the accuracy table above.</p>
 </section>
 </section>
-<section id="conclusion" class="level1" data-number="9">
-<h1 data-number="9"><span class="header-section-number">9</span> Conclusion</h1>
+<section id="conclusion" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Conclusion</h1>
 <p><strong>Summary of Findings:</strong></p>
 <p>All three US national accounts series — GDP, domestic demand, and imports — exhibit strong upward trends with stable quarterly seasonality and remainder variance dominated by two structural breaks: the 2008–09 Global Financial Crisis and the 2020 Q2 COVID-19 collapse. The log transformation effectively stabilises variance, and first-differencing achieves stationarity as confirmed by KPSS tests.</p>
 <p><strong>ETS</strong> models capture the trend-seasonal structure well. The auto-selected specification will likely be an AAN or AAA model. The primary limitation is that ETS treats the COVID outlier as a one-period shock and reverts to trend quickly — this can produce overconfident forecasts if the post-COVID recovery trajectory differs from pre-pandemic trend.</p>
