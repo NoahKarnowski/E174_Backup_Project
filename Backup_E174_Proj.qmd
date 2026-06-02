@@ -14,7 +14,7 @@ editor: visual
 
 # AI Disclaimer:
 
-AI, specifically Claude, Perplexity, and Gemini were consulted with to troubleshoot errors, form tables for the output values, and help with cleaning up our code. AI also helped us to add additions making our knitted report very pretty.
+In the creation of this report we used large language models, specifically Claude, Perplexity, and Gemini to troubleshoot errors, form tables, and help with the cleaning of our code. These models also helped us greatly in adding the extra code needed to make the graphs outputted by R look pretty.
 
 ```{r setup}
 #| label: setup
@@ -40,6 +40,8 @@ library(kableExtra)
 
 ## Load Raw CSV Files
 
+These csv data files come from the OECD database, due to the advanced querying we had to do to get this data from we have decided it is easiest to distribute the csv files directly as a part of this report.
+
 ```{r load-data}
 #| echo: true
 #| message: false
@@ -55,9 +57,9 @@ US_IMP <- read.csv("us_imp.csv")
 US_GDP <- read.csv("us_gdp.csv")
 ```
 
-## Clean and Join into Tsibble
+## Clean and Join Data
 
-Here, the chunk below selects the relevant columns from each CSV and removes the rest, then left joins the tables together to make a singular reference table. This master table is also cleaned, set to a tsibble format for time series analysis, and adds logged versions of each varaible's values for future analysis.
+Here, the chunk below selects the relevant columns from each csv data-set and then left joins the tables together to make a singular master reference table before cleaning out the unused data from the environment. We then add a logged variant of every variable to the master table before converting the table into a tsibble object.
 
 ```{r clean-data}
 #| echo: true
@@ -77,8 +79,11 @@ US_IMP <- US_IMP %>%
                 imports = OBS_VALUE)
 
 us_clean <- US_DD %>%
+  #Left joining the data-sets together
   left_join(US_GDP, by = c("date", "country")) %>%
   left_join(US_IMP, by = c("date", "country")) %>%
+  #Convert the dates in the date column into yearquarter objects to make
+  #working with the time component of the data easier
   mutate(date = yearquarter(date)) %>%
   group_by(date, country) %>%
   summarise(
@@ -87,14 +92,15 @@ us_clean <- US_DD %>%
     imports         = sum(imports,         na.rm = TRUE),
     .groups = "drop") %>% as_tsibble(key = country, index = date)
 
-# Add log-transformed columns — stabilises variance and linearises growth
 us_clean <- us_clean %>%
+  # Add log-transformed columns — stabilizes variance and linearises growth
   mutate(
     log_gdp             = log(gdp),
     log_domestic_demand = log(domestic_demand),
     log_imports         = log(imports)
   )
-
+#Clean out unused data-sets from the Enviorment
+rm(US_DD, US_IMP, US_GDP)
 glimpse(us_clean)
 ```
 
@@ -120,7 +126,7 @@ us_clean %>%
   theme_bw()
 ```
 
-**Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial cricis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.
+**Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial crisis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.
 
 ## Log-Transformed Series
 
@@ -141,7 +147,7 @@ us_clean %>%
   theme_bw()
 ```
 
-**Analysis:** Log transforming each variable did make the lines smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likey impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.
+**Analysis:** Log transforming each variable did make the lines smoother, however the strong upward trend remains. The massive drops in value associated with the 2008 financial crisis and covid pandemic still appear in each of the graphs. This will most likely impact the forecasting we do later on. In more statistical terms, the COVID-19 pandemic and 2008 financial crisis created outliers in the data that will likely negatively impact the accuracy of the forecasting models we create later on.
 
 ## STL Decomposition
 
@@ -165,11 +171,11 @@ us_clean %>%
   labs(title = "STL Decomposition: Log Imports") + theme_bw()
 ```
 
-**Analysis:** All three series share the same decomposition pattern of a clear positive trend, consistent seasonal patterns, and a remainder that hovers around 0 (the mean) until the COVID-19 pandemic. The seasonal component is highly consistent across time, so additive instead of multiplicative seasonality should be present in our ETS models. When we use R and other tests to pick the best ETS decomposition, we will know for sure what specifications are needed.
+**Analysis:** All three series share the same decomposition pattern of a clear positive trend, consistent seasonal patterns, and a remainder that hovers around 0 (the mean) until the COVID-19 pandemic. The seasonal component is highly consistent across time, so additive instead of multiplicative seasonality should be chosen when using ETS or other similar models.
 
 # Training and Testing Split
 
-As the chunk title implies, we are setting out training data period, 2000 Q1 to 2023 Q4, and our test data period, 2024 Q1 to 2025 Q4.
+As the chunk heading implies, we are carving out data from 2000 Q1 to 2023 Q4 as our training data, and using 2024 Q1 to 2025 Q4 as our test data-set. The output of the code chunk below shows the number of observations in each data-set.
 
 ```{r train-test}
 #| echo: true
@@ -189,7 +195,7 @@ ETS (Error, Trend, and Seasonal) models decompose a series into three exponentia
 
 ## Fit Multiple ETS Specifications
 
-Five specifications are fit per variable: an automatically selected model, two damped/undamped additive variants, and one full additive seasonal model. Residuals are being checked before using the models for forecasting to confirm the data has white-noise for the remainders.
+Five specifications are fit per variable: an automatically selected model, two additive variants (one dampened and one not), and one full additive seasonal model. Residuals are being checked before using the models for forecasting to confirm the data has white-noise for the remainders.
 
 ```{r ets-fit}
 #| echo: true
@@ -208,7 +214,10 @@ ets_fit_gdp <- us_train %>%
 ets_fit_dd <- us_train %>%
   model(
     auto_ets = ETS(log_domestic_demand),
-    ets_AAN  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")), ets_AAdN = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("N")), ets_AAA  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("A")), ets_AAdA = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("A")))
+    ets_AAN  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")),
+    ets_AAdN = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("N")),
+    ets_AAA  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("A")),
+    ets_AAdA = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("A")))
 
 # Imports
 ets_fit_imp <- us_train %>%
@@ -297,7 +306,7 @@ ets_fit_imp %>%
 
 ## ETS Residual Diagnostics
 
-Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show 3 main traits: no autocorrelation in the time plot, ACF values within 95% bounds, and a normally distributed histogram.
+Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show 3 main traits: no autocorrelation in the time plot, ACF values within 95% bounds (blue dashed lines), and a normally distributed histogram.
 
 ```{r ets-residuals}
 #| echo: false
@@ -316,7 +325,7 @@ ets_fit_imp %>% dplyr::select(auto_ets) %>%
   labs(title = "ETS Residual Diagnostics: Log Imports") + theme_bw()
 ```
 
-**Analysis:** Examine each panel. The 2020 COVID shock still appears strongly on the time plot, but otherwise the mean is 0 for every variable in the best ETS models. All gg_tsresiduals plots for each ETS have ACF values within the 95% boundary, and a normally distributed histogram. We can therefor conclude that taking the log of the variables has given us stationary data to work with that's white noise. An Ljung-Box test will also be performed.
+**Analysis:** Examine each panel. The 2020 COVID shock and 2008 finacial crisis still appear strongly on the time plot, but otherwise the mean is 0 for every variable in the best ETS models. All gg_tsresiduals plots for each ETS model have ACF values within the 95% boundary, and a normally distributed histogram. We can therefor conclude that taking the log of the variables has given us stationary data to work with and that the errors are likely white noise. A Ljung-Box test will also be performed below.
 
 ## Ljung-Box Test on ETS Residuals
 
@@ -344,7 +353,7 @@ bind_rows(
 
 ## ETS Forecast on Test Set (2024 Q1 – 2025 Q4)
 
-The code below is going to now take our models, and after training them on training data, forecast them on the test data to verify accuracy of the ETS models.
+The code below is going to now take our models, after training them on the training data, and test their forecasts using the test data to verify their accuracy.
 
 ```{r ets-forecast-test}
 #| echo: false
@@ -408,7 +417,7 @@ ets_accuracy %>%
   kableExtra::column_spec(3:6, color = "#2c2c2c")
 ```
 
-Starting with the results of our Log GDP forecast accuracy, we see that the auto-selected ETS model by R has the lowest RMSE of all models. The ETS(A,A,N) model which was our first manually selected model performed the 2nd best out of the other models in terms of RMSE. When plotting the forecast of the future, we will therefor use the R-selected model since it has the lowest RMSE. Moving to the Log of domestic demand and log of imports ETS tests, we actual see the ETS(A,A,N) for Log_dd (domestic demand) has the lowest RMSE. This contrasted our training data results, but doing well on the training data doesn't guarentee a model does well on the test data. This same ETS(A,A,N) was also performing best on the test data for the log_imp variable. Therefor, when plotting our forecasts for the future, we will be using the ETS(A,A,N) model for domestic demand and imports. One important caveat is that while our manual models did well on the training data, that may be affected by the COVID outlier data, so it may not be the absolutely best data.
+**Analysis:**Starting with the results of our Log GDP forecast, we see that the auto-selected ETS model by R has the lowest RMSE of all models. The ETS(A,A,N) model which was our first manually selected model performed the 2nd best out of the other models in terms of RMSE. When plotting the forecast in the future, we will therefor use the R-selected model since it has the lowest RMSE. Moving to the Log of domestic demand and log of imports, we actually see the ETS(A,A,N) for Log_dd (domestic demand) having the lowest RMSE. This contrasted our training data results, but doing well on the training data doesn't guarantee a model does well on the test data. This same ETS(A,A,N) was also performing best on the test data for the log_imp variable. Therefor, when plotting our forecasts in the future, we will be using the ETS(A,A,N) model for domestic demand and imports. One important caveat is that while our manual models did well on the training data, that may be affected by the previously mentioned outliers in our data, so it may not be the absolutely best data.
 
 ```{r ets-forecast-plots}
 #| echo: false
@@ -485,11 +494,11 @@ fc_ets_imp_final %>%
   theme_bw()
 ```
 
-**Analysis:** The above plots have taken the best ETS model based on performance on the test data, and forecasted the long values for each variable 9 quarters into the future. Prediction intervals widen the longer out we go due to unforeseeable shocks. Every model when looking at the confidence intervals and steepness of the forecast lines looks pretty consistent with the data as a whole, so Crawford and I are quite happy with these forecasts.
+**Analysis:** In the above plots we have taken the best ETS model based on their performance from the test data, and have used them to forecast each variable 9 quarters into the future starting from the very edge of our latest data. The prediction interval for each plot widen the longer out we go due to unforeseeable shocks. Every model when looking at the confidence intervals and steepness of the forecast lines looks pretty consistent with the data as a whole, so Crawford and I are quite happy with these forecasts.
 
 # ARIMA Modelling
 
-ARIMA models use lagged values and lagged errors to capture autocorrelation structure after differencing to achieve stationarity. The differencing order of "d" is determined by unit root tests; seasonal differencing of "D" is evaluated by comparing AICc values.
+ARIMA models use lagged values and lagged errors to capture autocorrelation structure after differencing to achieve stationallity. The differencing order of "d" is determined by unit root tests; seasonal differencing of "D" is evaluated by comparing AICc values.
 
 ## Unit Root Tests and Differencing Diagnostics
 
@@ -511,7 +520,7 @@ us_train %>% ACF(log_imports,         lag_max = 20) %>% autoplot() +
 
 ### KPSS Tests and Recommended Differencing Order
 
-KPSS tests being used below are another way we will be confirming whether our data is stationary for ARIMA use (as it's required). KPSS tests assume a null hypothesis that the data is stationary and that no unit roots are present. We will again use a 0.05 threshold to determine if this criteria is met.
+KPSS (Kwiatkowski-Phillips-Schmidt-Shin) tests being used below are another way we will be confirming whether our data is stationary or not as is required for ARIMA use. KPSS tests assume a null hypothesis that the data is stationary and that no unit roots are present. We will again use a 0.05 p-value threshold to determine if this criteria is met.
 
 ```{r arima-unitroot}
 #| echo: false
@@ -577,7 +586,7 @@ bind_rows(
   kableExtra::column_spec(2, color = "#2c2c2c")
 ```
 
-**Analysis:** From the KPSS table generated by R, every p-value for each of our logged variables is one, so not only do we reject the null hypothesis, but this confirms we must difference the data and test if the variables are stationary afterward. Moving to the unit root test table and differencing required, the table indicates we need to differentiate each logged variable once to have stationary data.
+**Analysis:** From the KPSS table generated by R, every p-value for each of our logged variables is less than 0.05, so not only do we reject the null hypothesis, but this confirms we must difference the data and test if the variables are stationary afterward. Moving to the unit root test table and the amount of differencing required, the table indicates we need to difference each logged variable once to have stationary data.
 
 ### ACF and PACF of First-Differenced Series
 
@@ -606,11 +615,11 @@ us_train %>%
   labs(title = "First-Differenced Log Imports: Time Plot, ACF, PACF") + theme_bw()
 ```
 
-**Analysis:** After first differencing, gg_tsdisplay plots indicate that our data is now stationary. The ACF plots of every differnced log variable have no values crossing the 95% boundary, and the PACF plots have no values that indicate an AR process needed. As such, we can now go forward, layout some ARIMA models, fit them to the test and training data, compare results, then forecast into the future.
+**Analysis:** After first-order differencing, the gg_tsdisplay plots indicate that the data is stationary. Specifically, the ACF plots for each differenced log variable show no significant spikes exceeding the 95% confidence boundary, and the PACF plots show no patterns suggesting an AR component. Consequently, we can proceed with specifying and fitting various ARIMA models to the training and test data, comparing their performance, and generating future forecasts.
 
 ## Fit ARIMA Specifications
 
-Based on the ACF/PACF diagnostics above, three manual specifications are fit alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality. The variety of models is to make sure that, in case some data wasn't picked, we are covering our bases.
+Based on the ACF/PACF diagnostics above, three manual specifications are fitted alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality. The variety of models is to make sure that, in case some data wasn't picked, we are covering our bases.
 
 ```{r arima-fit}
 #| echo: true
@@ -727,7 +736,7 @@ glance(arima_fit_imp) %>%
   kableExtra::row_spec(1, background = "#fffde7")
 ```
 
-**Analysis:** After laying out the different ARIMA model specifications, and then applying them to the US training data, we now have the results to see what models have fitted well. In every table, the lowest AICc model has been highlighted in yellow, which is R's auto-selected model for each.
+**Analysis:** After laying out the different ARIMA model specifications, and then applying them to the US training data, we now have the results to see what models have fitted well. In every table, the lowest AICc model has been highlighted in yellow, which, in this case, is R's auto-selected model for each.
 
 ```{r arima-report}
 #| echo: false
@@ -846,7 +855,7 @@ arima_accuracy %>%
     "blue", "black"))
 ```
 
-Now we take all our ARIMA models after apply to training data, and applying them to the test data to determine what specifications will be best for forecasting future values. With the r code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For differenced log domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
+**Analysis:**Now we take all our ARIMA models and apply them to both the training and test data to determine what specifications will be best for forecasting future values. Our table of results colors the RMSE value of the best performing models in blue. For differenced log domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well with an RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
 
 ```{r arima-forecast-plots}
 #| echo: false
@@ -925,68 +934,25 @@ fc_arima_imp_final %>%
 
 # VAR Modelling
 
-VAR (Vector Autoregression) jointly models all three variables as a system, allowing each variable's forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that univariate ETS and ARIMA cannot.
+VAR (Vector Autoregression) jointly models all three variables as a system, allowing each variable's forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that uni-variate ETS and ARIMA models cannot.
 
 VAR requires **stationary** inputs. Because all three log series have unit roots (difference = 1), we work with first-differenced log series.
+
+# Bookmark
 
 ## Prepare Differenced Data
 
 ```{r var-prep}
-#| echo: true
 
-us_clean_diff <- us_clean %>%
-  mutate(
-    d_log_gdp     = difference(log_gdp),
-    d_log_dd      = difference(log_domestic_demand),
-    d_log_imports = difference(log_imports)
-  ) %>%
-  filter(!is.na(d_log_gdp))
-
-us_train_diff <- us_clean_diff %>% filter(date <= yearquarter("2023 Q4"))
-us_test_diff  <- us_clean_diff %>% filter(date >= yearquarter("2024 Q1"))
-
-# Remove tsibble key for vars package compatibility
-train_mat <- us_train_diff %>%
-  as_tibble() %>%
-  dplyr::select(d_log_gdp, d_log_dd, d_log_imports) %>%
-  as.matrix()
 ```
 
 ## Stationarity Check on Differenced Series
 
 ```{r var-stationarity}
-#| echo: false
 
-# AI helping to create the unit root KPSS test and visualize results in a nice table
-
-bind_rows(
-  us_train_diff %>% features(d_log_gdp, unitroot_kpss) %>% mutate(variable = "Δ Log GDP"),
-  us_train_diff %>% features(d_log_dd, unitroot_kpss) %>% mutate(variable = "Δ Log DD"),
-  us_train_diff %>% features(d_log_imports, unitroot_kpss) %>% mutate(variable = "Δ Log Imports")
-) %>%
-  dplyr::select(variable, kpss_stat, kpss_pvalue) %>%
-  knitr::kable(
-    format    = "html",
-    caption   = "KPSS Test on First-Differenced Log Series",
-    digits    = 4,
-    col.names = c("Variable", "KPSS Statistic", "P-value")
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13
-  ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#e1f5fe"   # soft cyan
-  ) %>%
-  kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e", width = "10em") %>%
-  kableExtra::column_spec(2:3, color = "#2c2c2c")
 ```
 
-**Analysis:** All our p-values are P-values are well above 0.05, so we fail to reject the null hypothesis that our data is stationary. We do not need a second difference according to the KPSS and p-value, so we can proceed on analysis.
+**Analysis:** All our p-values are well above 0.05, so we fail to reject the null hypothesis that our data is stationary. We do not need a second difference according to the KPSS and p-value, so we can proceed on analysis.
 
 ## ACF of Differenced Series
 
