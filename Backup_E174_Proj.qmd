@@ -1458,7 +1458,7 @@ unified_acc %>%
 ## Final Model Selection Summary
 
 | Variable | Best by AICc | Best by RMSE | Recommendation |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Log GDP | *(fill after running)* | *(fill after running)* | *(fill after running)* |
 | Log Domestic Demand | *(fill after running)* | *(fill after running)* | *(fill after running)* |
 | Log Imports | *(fill after running)* | *(fill after running)* | *(fill after running)* |
