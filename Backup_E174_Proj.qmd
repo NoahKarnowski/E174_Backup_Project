@@ -445,7 +445,7 @@ fc_ets_dd %>%
   theme_bw()
 
 fc_ets_imp %>%
-  filter(.model == "auto_ets") %>%
+  filter(.model == "ets_AAN") %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
            level = c(80, 95), alpha = 0.5) +
   labs(title    = "ETS Auto Forecast: Log Imports (2024–2025)",
@@ -1507,7 +1507,7 @@ unified_acc %>%
 
 All three US national variables of GDP, domestic demand, and imports have a strong upward trend, stable yet minimal seasonality, and a stable variance excluding the 2008 and 2020 recessions. The log transformation helps to minimize those two shocks, and taking the first difference gave us the stationary data we needed to proceed with analysis. KPSS tests also helped to confirm seasonality, a lack of unit roots present, and how many differences were required. Portmanteau tests confirmed our data has white noise as the remainder, and our ACF and PACF plots acted as visual representations of these checks.
 
-**ETS** models capture the trend and minimal seasonality of our data, however like all models it was influenced by the COVID shock due to how close it was to our last data points. The auto-selected R specifications was an ETS(M,A,N) for every model, meaning multiplicative errors, additive trend that's consistent over time, and no seasonality. The auto-selected model performed best on the test data and was used to forecast future values, but was not exactly aligned with the import test data. This was expected by our group because the import data was the most volatile over time.
+**ETS** models capture the trend and minimal seasonality of our data, however like all models it was influenced by the COVID shock due to how close it was to our last data points. The auto-selected R specifications was an ETS(M,A,N) for every model, meaning multiplicative errors, additive trend that's consistent over time, and no seasonality. The auto-selected model performed best on the test data for GDP and domestic demand, with ETS(A,A,N) performing best with imports on the test data. These models were used with their respective variables when forecasting future values. The imports test data forecast was not perfectly aligned as there was some big changes toward the end of our data. This was expected by our group because the import data was the most volatile over time.
 
 **ARIMA** models additionally capture short-run autocorrelation structure in the differenced series. Seasonal ARIMA specifications may improve on purely non-seasonal models given the confirmed quarterly seasonal pattern in STL. ARIMA tends to produce better short-horizon forecasts for series with residual autocorrelation after differencing.
 
