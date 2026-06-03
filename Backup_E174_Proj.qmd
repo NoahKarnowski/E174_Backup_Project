@@ -1186,10 +1186,16 @@ fc_var_test %>%
     us_clean_diff_unkeyed %>% filter(date >= yearquarter("2020 Q1")),
     level = c(80, 95), alpha = 0.5
   ) +
-  labs(title    = "VAR Forecast vs Actuals: Δ Log Series (2024–2025)",
-       subtitle = "AICc-selected lag order; 80% and 95% intervals",
-       x = NULL, y = "First Difference of Log Value") +
-  theme_bw()
+  labs(
+    title = "VAR Forecast vs Actuals: Δ Log Series (2024–2025)",
+    subtitle = "AICc-selected lag order; 80% and 95% intervals",
+    x = NULL,
+    y = "First Difference of Log Value"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )
 ```
 
 **Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that's a good sign. Unlike the ETS and ARIMA analysis previously, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph an values fluctuate more than the GDP and domestic demand values.
@@ -1304,10 +1310,16 @@ fc_var_final %>%
     us_clean_diff_unkeyed %>% filter(date >= yearquarter("2020 Q1")),
     level = c(80, 95), alpha = 0.5
   ) +
-  labs(title    = "VAR Forecast: Δ Log Series (2026 Q1 – 2027 Q4)",
-       subtitle = "Refit on full data; 80% and 95% prediction intervals",
-       x = NULL, y = "First Difference of Log Value") +
-  theme_bw()
+  labs(
+    title = "VAR Forecast: Δ Log Series (2026 Q1 – 2027 Q4)",
+    subtitle = "Refit on full data; 80% and 95% prediction intervals",
+    x = NULL,
+    y = "First Difference of Log Value"
+  ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )
 ```
 
 The VAR(2) model forecasts all three series of US GDP, domestic demand, and imports going to near-zero first-difference log growth through 2027 Q4, which in levels translates to **slow but stable positive growth**. The lag 2 structure which should have been implemented means the model is capturing up to two quarters of backward momentum. The imports panel has the widest prediction interval due to trade being highly volatile relative to GDP during demand shocks.
@@ -1482,7 +1494,7 @@ unified_acc %>%
 ## Final Model Selection Summary
 
 | Variable | Best by AICc (within family) | Best by RMSE (test set) | Recommendation |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 | Either model is defensible; use **auto ETS (M,A,N)** for simplicity since it also has the best in-family AICc and matches ARIMA on test performance |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA (auto, RMSE = 0.0052)** edges ETS (0.0055) | **Auto ARIMA (0,1,0) w/ drift** — wins on both test RMSE and in-family AICc |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS (ets_AAN, RMSE = 0.0396)** beats ARIMA (0.0411) | **ETS(A,A,N)** — wins on test RMSE; imports are volatile enough that the simpler ETS trend model generalizes better than ARIMA |
