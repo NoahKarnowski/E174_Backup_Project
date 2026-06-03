@@ -1494,7 +1494,7 @@ unified_acc %>%
 ## Final Model Selection Summary
 
 | Variable | Best by AICc (within family) | Best by RMSE (test set) | Recommendation |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 | Either model is defensible; use **auto ETS (M,A,N)** for simplicity since it also has the best in-family AICc and matches ARIMA on test performance |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA (auto, RMSE = 0.0052)** edges ETS (0.0055) | **Auto ARIMA (0,1,0) w/ drift** — wins on both test RMSE and in-family AICc |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS (ets_AAN, RMSE = 0.0396)** beats ARIMA (0.0411) | **ETS(A,A,N)** — wins on test RMSE; imports are volatile enough that the simpler ETS trend model generalizes better than ARIMA |
