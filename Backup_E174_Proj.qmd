@@ -14,7 +14,9 @@ editor: visual
 
 # AI Disclaimer:
 
-AI, specifically Claude, Perplexity, and Gemini were consulted with to troubleshoot errors, form tables for the output values, and help with cleaning up our code. AI also helped us to add additions making our knitted report very pretty.
+AI, specifically Claude, Perplexity, and Gemini were consulted with to troubleshoot errors, form tables, correct code, and help with organizing our work AI also used kable so that resulting tables with values are visually clear.
+
+# Basic Setup
 
 ```{r setup}
 #| label: setup
@@ -22,18 +24,17 @@ AI, specifically Claude, Perplexity, and Gemini were consulted with to troublesh
 #| message: false
 #| warning: false
 
+# Clear the environment to ensure a clean workspace before loading any data or packages
 rm(list = ls())
 
-library(tidyverse)
-library(tsibble)
-library(fpp3)
-library(fredr)
-library(scales)
-library(vars)
-library(fable)
-library(feasts)
-library(knitr)
-library(kableExtra)
+library(tidyverse) # Basic data and manipulation
+library(tsibble)   # Converting dataframes into time series data frames
+library(fpp3)      # Forecasting tools and packages like fable and feast
+library(fredr)     # FRED API Access to data we need
+library(scales)    # Formatting the axis of a graph manually
+library(vars)      # Used for fitting Vector Auto Regressions (VAR Models)
+library(knitr)     # Helps create nice visualizations of results in tables
+library(kableExtra)# Creates nice HTML reports when rendering this file
 ```
 
 # Data Loading and Preparation
@@ -45,55 +46,45 @@ library(kableExtra)
 #| message: false
 #| warning: false
 
-# OECD data: US GDP, Domestic Demand, and Imports of Goods & Services
-# Period: 2000 Q1 to 2025 Q4
-# Units: national currency, chain-linked volume, base year = 2017
-# Unit multiplier = 6 (true values = observation × 10^6)
+# The three CSV files below contain quarterly US national accounts data sourced from the OECD. Each file contains the time range of 2000 Q1 to 2025 Q4, measured in millions of USD, chain-linked volume with 2017 reference year, and a unit multiplier of 6.
 
-US_DD  <- read.csv("us_dd.csv")
-US_IMP <- read.csv("us_imp.csv")
-US_GDP <- read.csv("us_gdp.csv")
+US_DD  <- read.csv("us_dd.csv")   # = Domestic Demand of US
+US_IMP <- read.csv("us_imp.csv")  # = Imports of Goods & Services of US
+US_GDP <- read.csv("us_gdp.csv")  # = Gross Domestic Product of US
 ```
 
 ## Clean and Join into Tsibble
-
-Here, the chunk below selects the relevant columns from each CSV and removes the rest, then left joins the tables together to make a singular reference table. This master table is also cleaned, set to a tsibble format for time series analysis, and adds logged versions of each variable's values for future analysis.
 
 ```{r clean-data}
 #| echo: true
 #| message: false
 #| warning: false
 
-US_DD <- US_DD %>%
-  dplyr::select(date = TIME_PERIOD, country = REF_AREA,
+# First we are converting the data frames of the csv files in the previous code chunk into tsibble formatted data frames.
+
+US_DD <- US_DD %>%dplyr::select(date = TIME_PERIOD, country = REF_AREA,
                 domestic_demand = OBS_VALUE)
 
-US_GDP <- US_GDP %>%
-  dplyr::select(date = TIME_PERIOD, country = REF_AREA,
+US_GDP <- US_GDP %>%dplyr::select(date = TIME_PERIOD, country = REF_AREA,
                 gdp = OBS_VALUE)
 
-US_IMP <- US_IMP %>%
-  dplyr::select(date = TIME_PERIOD, country = REF_AREA,
+US_IMP <- US_IMP %>% dplyr::select(date = TIME_PERIOD, country = REF_AREA,
                 imports = OBS_VALUE)
 
-us_clean <- US_DD %>%
-  left_join(US_GDP, by = c("date", "country")) %>%
-  left_join(US_IMP, by = c("date", "country")) %>%
+# Now we merge the tsibbles together, and each of the variables then has their values summed, the any groups are dropped, and the merged data frame is converted to a tsibble format. 
+
+us_clean <- US_DD %>% left_join(US_GDP, by = c("date", "country")) %>%
+  left_join(US_IMP, by = c("date", "country")) %>% 
   mutate(date = yearquarter(date)) %>%
   group_by(date, country) %>%
-  summarise(
-    domestic_demand = sum(domestic_demand, na.rm = TRUE),
-    gdp             = sum(gdp,             na.rm = TRUE),
-    imports         = sum(imports,         na.rm = TRUE),
-    .groups = "drop") %>% as_tsibble(key = country, index = date)
+  summarise(domestic_demand = sum(domestic_demand, na.rm = TRUE), gdp = sum(gdp, na.rm = TRUE), imports = sum(imports, na.rm = TRUE), .groups = "drop") %>% as_tsibble(key = country, index = date)
 
-# Add log-transformed columns — stabilises variance and linearises growth
-us_clean <- us_clean %>%
-  mutate(
-    log_gdp             = log(gdp),
-    log_domestic_demand = log(domestic_demand),
-    log_imports         = log(imports)
-  )
+# Add log-transformed columns to stabilize any variance.
+
+us_clean <- us_clean %>% mutate(log_gdp = log(gdp), 
+    log_domestic_demand = log(domestic_demand), log_imports  = log(imports))
+
+# Offering a quick look at the structure of our central tsibble data frame
 
 glimpse(us_clean)
 ```
@@ -102,43 +93,36 @@ glimpse(us_clean)
 
 ## Raw Level Plots
 
-Basic time plots of the base variables, GDP, domestic demand, and import values for the US are created below.
-
 ```{r raw-plots}
 #| echo: false
 #| fig-height: 8
 
-us_clean %>%
-  pivot_longer(cols = c(gdp, domestic_demand, imports),
-               names_to = "variable", values_to = "value") %>%
-  autoplot(value) +
+# Here we are taking the time plots of all our variables (GDP, domestic demand, and imports) to see what alterations must be made.
+# e.g. If the variance is changing we might log the variable during analysis
+us_clean %>% pivot_longer(cols = c(gdp, domestic_demand, imports),
+  names_to = "variable", values_to = "value") %>% autoplot(value) +
   facet_wrap(~variable, scales = "free_y", ncol = 1) +
   scale_y_continuous(labels = comma) +
   labs(title    = "US National Accounts: Raw Quarterly Levels (2000–2025)",
-       subtitle = "Millions of USD, chain-linked volume (2017 base)",
-       x = NULL, y = "Value (Millions)") +
-  theme_bw()
+  subtitle = "Millions of USD, chain-linked volume (2017 base)",
+  x = NULL, y = "Value (Millions)") + theme_bw()
 ```
 
 **Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial crisis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.
 
 ## Log-Transformed Series
 
-Like the previous chunk, we are creating a time plot of each variable, this time for the logged versions of each variable.
-
 ```{r log-plots}
 #| echo: false
 #| fig-height: 8
 
-us_clean %>%
-  pivot_longer(cols = c(log_gdp, log_domestic_demand, log_imports),
-               names_to = "variable", values_to = "value") %>%
-  autoplot(value) +
+# We saw in the previous code chunk that the variance was shifting, so below we have the same time plots, this time of our logged variables. 
+us_clean %>% pivot_longer(cols = c(log_gdp, log_domestic_demand, log_imports),
+  names_to = "variable", values_to = "value") %>%  autoplot(value) +
   facet_wrap(~variable, scales = "free_y", ncol = 1) +
   labs(title    = "Log-Transformed US National Accounts (2000–2025)",
-       subtitle = "Log scale linearises exponential growth",
-       x = NULL, y = "Log Value") +
-  theme_bw()
+  subtitle = "Log scale linearises exponential growth", x = NULL, 
+  y = "Log Value") + theme_bw()
 ```
 
 **Analysis:** Log transforming each variable did make the lines smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likely impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.
@@ -149,19 +133,18 @@ us_clean %>%
 #| echo: false
 #| fig-height: 6
 
+# Now taking an STL decomposition of each of our logged variables with a trend window of 13, and seasonal window of periodic (constant seasonal component) 
+
 us_clean %>%
   model(STL(log_gdp ~ trend(window = 13) + season(window = "periodic"))) %>%
   components() %>% autoplot() +
   labs(title = "STL Decomposition: Log GDP") + theme_bw()
 
 us_clean %>%
-  model(STL(log_domestic_demand ~ trend(window = 13) + season(window = "periodic"))) %>%
-  components() %>% autoplot() +
+  model(STL(log_domestic_demand ~ trend(window = 13) + season(window = "periodic"))) %>% components() %>% autoplot() +
   labs(title = "STL Decomposition: Log Domestic Demand") + theme_bw()
 
-us_clean %>%
-  model(STL(log_imports ~ trend(window = 13) + season(window = "periodic"))) %>%
-  components() %>% autoplot() +
+us_clean %>% model(STL(log_imports ~ trend(window = 13) + season(window = "periodic"))) %>% components() %>% autoplot() +
   labs(title = "STL Decomposition: Log Imports") + theme_bw()
 ```
 
@@ -169,19 +152,19 @@ us_clean %>%
 
 # Training and Testing Split
 
-As the chunk title implies, we are setting out training data period, 2000 Q1 to 2023 Q4, and our test data period, 2024 Q1 to 2025 Q4.
-
 ```{r train-test}
 #| echo: true
 
-# Training: 2000 Q1 – 2023 Q4  =  96 quarters
-# Test:     2024 Q1 – 2025 Q4  =   8 quarters
-us_train <- us_clean %>% filter(date <= yearquarter("2023 Q4"))
-us_test  <- us_clean %>% filter(date >= yearquarter("2024 Q1"))
+# In order to compare our models and test them, we have split our data up by the following dates.
 
-cat("Training observations:", nrow(us_train), "\n")
-cat("Test observations:    ", nrow(us_test),  "\n")
+# Training: 2000 Q1 – 2023 Q4  =  96 quarters
+us_train <- us_clean %>% filter(date <= yearquarter("2023 Q4"))
+
+# Test:     2024 Q1 – 2025 Q4  =   8 quarters
+us_test  <- us_clean %>% filter(date >= yearquarter("2024 Q1"))
 ```
+
+We need to have our training data include 2020 completely as that year had outlier data which could skew test performance. If we included all quarters up to 2020, then 2020 to 2025 was test data, then our forecasts on the test data would struggle to accommodate all the fluctuations.
 
 # ETS Modelling
 
@@ -189,11 +172,12 @@ ETS (Error, Trend, and Seasonal) models decompose a series into three exponentia
 
 ## Fit Multiple ETS Specifications
 
-Five specifications are fit per variable: an automatically selected model, two damped/undampened additive variants, and one full additive seasonal model. Residuals are being checked before using the models for forecasting to confirm the data has white-noise for the remainders.
-
 ```{r ets-fit}
 #| echo: true
 #| warning: false
+
+# Five specifications are fit per variable: 
+# R's auto-selected model, two damped/undampened additive trends, and one full additive model.
 
 # GDP 
 ets_fit_gdp <- us_train %>%
@@ -225,94 +209,53 @@ ets_fit_imp <- us_train %>%
 ```{r ets-ic}
 #| echo: false
 
+#This code chunk repeats the same setup, but for each variable we select all our models, and compare by AICc and BIC criteria, arranging from highest to lowest for AICc specifically.
+
+# Then, using the kableExtra package and some AI, we are able to set the output format of our ETS results to be a clean table that is readable. The best model in terms of ETS has it's row bolded, with a mint backround.
+
 # For ETS of GDP
-# AI assisted code to make clearly visible results (like future chunks!)
-glance(ets_fit_gdp) %>%
-  dplyr::select(.model, AICc, BIC) %>%
-  arrange(AICc) %>%
-  knitr::kable(
-    caption = "ETS for Logged GDP",
-    digits = 2,
-    col.names = c("Model", "AICc", "BIC"),
-    align = c("l", "r", "r")
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "bordered"),
-    full_width = FALSE,
-    position = "center"
-  ) %>%
+glance(ets_fit_gdp) %>% dplyr::select(.model, AICc, BIC) %>%
+  arrange(AICc) %>% knitr::kable( caption = "ETS for Logged GDP", digits = 2,
+  col.names = c("Model", "AICc", "BIC"), align = c("l", "r", "r")) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "bordered"), full_width = FALSE, position = "center") %>%
   kableExtra::row_spec(1, bold = TRUE, background = "#d4edda")
 
+
 # For ETS of domestic demand
-# AI assisted code to make clearly visible results (like future chunks!)
-glance(ets_fit_dd) %>%
-  dplyr::select(.model, AICc, BIC) %>%
-  arrange(AICc) %>%
-  knitr::kable(
-    caption = "ETS for Logged Domestic Demand",
-    digits = 2,
-    col.names = c("Model", "AICc", "BIC"),
-    align = c("l", "r", "r")
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "bordered"),
-    full_width = FALSE,
-    position = "center"
-  ) %>%
+glance(ets_fit_dd) %>% dplyr::select(.model, AICc, BIC) %>% arrange(AICc) %>%
+  knitr::kable(caption = "ETS for Logged Domestic Demand", digits = 2,
+  col.names = c("Model", "AICc", "BIC"), align = c("l", "r", "r")) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "bordered"), full_width = FALSE, position = "center") %>%
   kableExtra::row_spec(1, bold = TRUE, background = "#d4edda")
 
 # For ETS of imports
-# AI assisted code to make clearly visible results (like future chunks!)
-glance(ets_fit_imp) %>%
-  dplyr::select(.model, AICc, BIC) %>%
-  arrange(AICc) %>%
-  knitr::kable(
-    caption = "ETS for Logged Imports",
-    digits = 2,
-    col.names = c("Model", "AICc", "BIC"),
-    align = c("l", "r", "r")
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "bordered"),
-    full_width = FALSE,
-    position = "center"
-  ) %>%
+glance(ets_fit_imp) %>% dplyr::select(.model, AICc, BIC) %>% arrange(AICc) %>%
+  knitr::kable(caption = "ETS for Logged Imports", digits = 2, col.names = c("Model", "AICc", "BIC"), align = c("l", "r", "r")) %>% 
+  kableExtra::kable_styling( bootstrap_options = c("striped", "hover", "bordered"), full_width = FALSE, position = "center") %>%
   kableExtra::row_spec(1, bold = TRUE, background = "#d4edda")
 
-# To see the best ETS model sepcifications
-ets_fit_gdp %>%
-  dplyr::select(auto_ets, .model_desc = 2) %>%
-  print()
-
-ets_fit_dd %>%
-  dplyr::select(auto_ets, .model_desc = 2) %>%
-  print()
-
-ets_fit_imp %>%
-  dplyr::select(auto_ets, .model_desc = 2) %>%
-  print()
+# To have R physcially report what the auto_ets specifications were for each variable
+ets_fit_gdp %>% dplyr::select(auto_ets, .model_desc = 2) %>% print()
+ets_fit_dd %>% dplyr::select(auto_ets, .model_desc = 2) %>% print()
+ets_fit_imp %>% dplyr::select(auto_ets, .model_desc = 2) %>% print()
 ```
 
 **Analysis:** Lower AICc indicates a better fitting model, and here R's auto-selected model performed the best with every variable. We were right with the first manually selected model of having an additive trend and no seasonality, but no dampening was present in these ETS models. Every auto-selected model by R has the same specifications of ETS(M,A,N), or multiplicative errors, additive trend, and no seasonality.
 
 ## ETS Residual Diagnostics
 
-Residuals are checked on the auto-selected model (best AICc candidate) before forecasting. A well-specified model should show 3 main traits: no autocorrelation in the time plot, ACF values within 95% bounds, and a normally distributed histogram.
-
 ```{r ets-residuals}
 #| echo: false
 #| fig-height: 5
 
-ets_fit_gdp %>% dplyr::select(auto_ets) %>%
-  gg_tsresiduals() +
+# The residuals of each of the best models, all R's auto-selected ones, are now being analyzed using gg_ts residuals. There should be a mean in the time plot of 0, no ACF values crossing the 95% boundary, and a normal distribution. 
+ets_fit_gdp %>% dplyr::select(auto_ets) %>% gg_tsresiduals() +
   labs(title = "ETS Residual Diagnostics: Log GDP") + theme_bw()
 
-ets_fit_dd %>% dplyr::select(auto_ets) %>%
-  gg_tsresiduals() +
+ets_fit_dd %>% dplyr::select(auto_ets) %>% gg_tsresiduals() +
   labs(title = "ETS Residual Diagnostics: Log Domestic Demand") + theme_bw()
 
-ets_fit_imp %>% dplyr::select(auto_ets) %>%
-  gg_tsresiduals() +
+ets_fit_imp %>% dplyr::select(auto_ets) %>% gg_tsresiduals() +
   labs(title = "ETS Residual Diagnostics: Log Imports") + theme_bw()
 ```
 
@@ -320,103 +263,68 @@ ets_fit_imp %>% dplyr::select(auto_ets) %>%
 
 ## Ljung-Box Test on ETS Residuals
 
-The Ljung-Box Test on our ETS models has a null hypothesis that there is no autocorrelation in our variables. If the p-value is below 0.05 as our threshold, we reject the null hypothesis and say that some autocorrelation is present.
-
 ```{r ets-ljungbox}
 #| echo: false
 
-# Create the combined table with nice kable formatting
-bind_rows(
-  augment(ets_fit_gdp) %>% 
-    filter(.model == "auto_ets") %>%
-    features(.innov, ljung_box, lag = 8, dof = 0) %>%
-    mutate(variable = "Log GDP"),
+# Ljung-Box tests are also being performed on the ETS models with the null hypothesis that there is no autocorrelation present. A p-value of 0.05 is our threshold for determining wether to accept or reject the null hypothesis. 
+
+# Ljung box test performed on GDP ETS, only on the auto model
+bind_rows(augment(ets_fit_gdp) %>% filter(.model == "auto_ets") %>%
+ features(.innov, ljung_box, lag = 10, dof = 3) %>%
+ mutate(variable = "Log GDP"),
   
-  augment(ets_fit_dd) %>% 
-    filter(.model == "auto_ets") %>%
-    features(.innov, ljung_box, lag = 8, dof = 0) %>%
-    mutate(variable = "Log Domestic Demand"),
+# Ljung box test performed on domestic demand ETS, only on the auto model
+augment(ets_fit_dd) %>% filter(.model == "auto_ets") %>%
+  features(.innov, ljung_box, lag = 10, dof = 3) %>%
+  mutate(variable = "Log Domestic Demand"),
   
-  augment(ets_fit_imp) %>% 
-    filter(.model == "auto_ets") %>%
-    features(.innov, ljung_box, lag = 8, dof = 0) %>%
-    mutate(variable = "Log Imports")
-) %>%
-  dplyr::select(variable, lb_stat, lb_pvalue) %>%
-  kable(
-    caption = "**Table:** Ljung-Box Test (lag=8) for ETS Auto Models",
-    digits = 4,
-    format = "pipe",
-    align = c("l", "r", "r"),
-    booktabs = TRUE
-  )
+# Ljung box test performed on imports ETS, only on the auto model
+augment(ets_fit_imp) %>% filter(.model == "auto_ets") %>%
+ features(.innov, ljung_box, lag = 10, dof = 3) %>%
+ mutate(variable = "Log Imports")) %>%
+  
+# Here is where we also get AI's assistance in creating a more readable table
+ dplyr::select(variable, lb_stat, lb_pvalue) %>% knitr::kable(
+ caption = "Ljung-Box Test (lag = 8) for Auto ETS Models", digits = 4,
+ format = "html", col.names = c("Variable", "LB Statistic", "P-value"),
+ align = c("l", "r", "r")) %>% kableExtra::kable_styling( bootstrap_options = "bordered", full_width = FALSE, position = "center")
 ```
 
-**Analysis:** In all of our Ljung-Box tests for the logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9943, 0.9980, and 0.7327 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation and that we can proceed with analysis.
+**Analysis:** In all of our Ljung-Box tests for the logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9844, 0.9916, and 0.5417 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation and that we can proceed with analysis. Our lags were set with 10 because there doesn't seem to be a trend from our original non-altered time plots. The degrees of freedom is calculated by the approximate number of smoothing parameters, and here we have 3, one for multiplicative errors, one for additive trend, and another for no seasonality in our best ETS.
 
 ## ETS Forecast on Test Set (2024 Q1 – 2025 Q4)
-
-The code below is going to now take our models, and after training them on training data, forecast them on the test data to verify accuracy of the ETS models.
 
 ```{r ets-forecast-test}
 #| echo: false
 #| fig-height: 5
 
+# Here each of our ETS models for every variable is forecasting on test data
 fc_ets_gdp <- ets_fit_gdp %>% forecast(h = 8)
 fc_ets_dd  <- ets_fit_dd  %>% forecast(h = 8)
 fc_ets_imp <- ets_fit_imp %>% forecast(h = 8)
 
-# Prepare accuracy data
+# accuracy() functions help prepare how accurate the ETS forecasts were with actual observed test data, and binds the results together.
 ets_accuracy <- bind_rows(
   accuracy(fc_ets_gdp, us_test) %>% mutate(variable = "Log GDP"),
   accuracy(fc_ets_dd,  us_test) %>% mutate(variable = "Log DD"),
   accuracy(fc_ets_imp, us_test) %>% mutate(variable = "Log Imports")
-) %>%
-  dplyr::select(variable, .model, RMSE, MAE, MAPE, MASE) %>%
+) %>% dplyr::select(variable, .model, RMSE, MAE, MAPE, MASE) %>%
   arrange(variable, RMSE)
 
-# Table 1: Log GDP
-ets_accuracy %>%
-  filter(variable == "Log GDP") %>%
-  knitr::kable(
-    format  = "html",
-    digits  = 4,
-    caption = "ETS Forecast Accuracy: Log GDP"
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13
-  ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#e8f4f8"   # soft sky blue
-  ) %>%
-  kableExtra::column_spec(1:2, bold = TRUE, color = "#1a1a2e") %>%
-  kableExtra::column_spec(3:6, color = "#2c2c2c")
+# Our first table contains only the accuracy results for all GDP models
+ets_accuracy %>% filter(variable == "Log GDP") %>% 
+  knitr::kable(format = "html", digits  = 4, 
+  caption = "ETS Forecast Accuracy: Log GDP" ) %>% kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, position = "left",  font_size = 13) %>% 
+  kableExtra::row_spec(0, bold  = TRUE, color = "#1a1a2e", background = "#e8f4f8") %>% kableExtra::column_spec(1:2, bold = TRUE, 
+  color = "#1a1a2e") %>% kableExtra::column_spec(3:6, color = "#2c2c2c")
 
-# Table 2: Log DD & Log Imports
-ets_accuracy %>%
-  filter(variable %in% c("Log DD", "Log Imports")) %>%
-  knitr::kable(
-    format  = "html",
-    digits  = 4,
-    caption = "ETS Forecast Accuracy: Log DD & Log Imports"
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13
-  ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#f5e6f0"   # soft lavender
-  ) %>%
-  kableExtra::column_spec(1:2, bold = TRUE, color = "#1a1a2e") %>%
+# This second table contains all the accuracy results for domestic demand and imports and all the models used with each variable
+ets_accuracy %>% filter(variable %in% c("Log DD", "Log Imports")) %>%
+  knitr::kable(format  = "html", digits  = 4, caption = "ETS Forecast Accuracy: Log DD & Log Imports") %>% kableExtra::kable_styling(
+  bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE,
+  position = "left", font_size = 13) %>%
+  kableExtra::row_spec(0,bold = TRUE,color = "#1a1a2e", background = "#f5e6f0"
+  ) %>% kableExtra::column_spec(1:2, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(3:6, color = "#2c2c2c")
 ```
 
@@ -426,44 +334,37 @@ Starting with the results of our Log GDP forecast accuracy, we see that the auto
 #| echo: false
 #| fig-height: 4
 
-# Best auto model — plot forecast vs actual
-fc_ets_gdp %>%
-  filter(.model == "auto_ets") %>%
-  autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
-           level = c(80, 95), alpha = 0.5) +
-  labs(title    = "ETS Auto Forecast: Log GDP (2024–2025)",
-       subtitle = "80% and 95% prediction intervals",
-       x = NULL, y = "Log GDP") +
-  theme_bw()
+# The code for each variable repeats the same setup, just different variables. Each plot also has the 80% and 95% confidence intervals of the forecast present.
 
-fc_ets_dd %>%
-  filter(.model == "auto_ets") %>%
+# Our best model for GDP from training data was taken, and forecasts on the amount of test data to visualize the accuracy of the best model.
+fc_ets_gdp %>% filter(.model == "auto_ets") %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
-           level = c(80, 95), alpha = 0.5) + labs(title    = "ETS Auto Forecast: Log Domestic Demand (2024–2025)",
-       subtitle = "80% and 95% prediction intervals",
-       x = NULL, y = "Log Domestic Demand") +
-  theme_bw()
+  level = c(80, 95), alpha = 0.5) +
+  labs(title = "ETS Auto Forecast: Log GDP (2024–2025)", x = NULL, 
+  y = "Log GDP") + theme_bw()
 
-fc_ets_imp %>%
-  filter(.model == "ets_AAN") %>%
+# Our best model for domest demand from training data was taken, and forecasts on the amount of test data to visualize the accuracy of the best model.
+fc_ets_dd %>% filter(.model == "auto_ets") %>%
   autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
-           level = c(80, 95), alpha = 0.5) +
-  labs(title    = "ETS Auto Forecast: Log Imports (2024–2025)",
-       subtitle = "80% and 95% prediction intervals",
-       x = NULL, y = "Log Imports") +
-  theme_bw()
+  level = c(80, 95), alpha = 0.5) + labs(title = "ETS Auto Forecast: Log Domestic Demand (2024–2025)", x = NULL, y = "Log Domestic Demand") + theme_bw()
+
+# Our best model for imports from training data was taken, and forecasts on the amount of test data to visualize the accuracy of the best model.
+fc_ets_imp %>% filter(.model == "ets_AAN") %>%
+  autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
+  level = c(80, 95), alpha = 0.5) +
+  labs(title = "ETS Auto Forecast: Log Imports (2024–2025)", x = NULL, 
+  y = "Log Imports") + theme_bw()
 ```
 
 **Analysis:** Above we see the plots of each of the auto-selected ETS models on our test data. Each plot forecasts quite closely to the actual data, including the logged imports plot. Despite a small spike in real values for the logged imports, the 80% confidence interval contains both the forecast and actual data.
 
 ## ETS Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)
 
-Models are now forecasting into the future based on their performance of the test data.
-
 ```{r ets-final-forecast}
 #| echo: false
 #| fig-height: 4
 
+#Models are now forecasting into the future based on their performance of the test data.
 ets_gdp_final <- us_clean %>% model(best_ets = ETS(log_gdp))
 ets_dd_final  <- us_clean %>% model(best_ets = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")))
 ets_imp_final <- us_clean %>% model(best_ets = ETS(log_imports ~ error("A") + trend("A")  + season("N")))
