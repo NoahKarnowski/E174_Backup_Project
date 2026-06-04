@@ -364,38 +364,22 @@ fc_ets_imp %>% filter(.model == "ets_AAN") %>%
 #| echo: false
 #| fig-height: 4
 
-#Models are now forecasting into the future based on their performance of the test data.
+# Here we are prepping the models which performed the best forecasting on test data, and then assigning them their ets_name_final. Notice that the R's auto-selected model only did best with GDP. Domestic demand and imports did better with our hypothesized models.
 ets_gdp_final <- us_clean %>% model(best_ets = ETS(log_gdp))
 ets_dd_final  <- us_clean %>% model(best_ets = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")))
 ets_imp_final <- us_clean %>% model(best_ets = ETS(log_imports ~ error("A") + trend("A")  + season("N")))
 
+# Assinging each ETS model it's forecast range of 8 quarters or 2 years
 fc_ets_gdp_final <- ets_gdp_final %>% forecast(h = 8)
 fc_ets_dd_final <- ets_dd_final  %>% forecast(h = 8)
 fc_ets_imp_final <- ets_imp_final %>% forecast(h = 8)
 
-fc_ets_gdp_final %>%
-  autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
-           level = c(80, 95), alpha = 0.5) +
-  labs(title    = "ETS Forecast: Log GDP (2026 Q1 – 2027 Q4)",
-       subtitle = "Auto-Selected R Model; 80% and 95% prediction intervals",
-       x = NULL, y = "Log GDP") +
-  theme_bw()
+# Below is some repeating code chunks which now autoplot the forecasted data, set the confidence intervals of 80% and 95%, give titles, and clean up the look of the graph. First GDP, then domestic demand (dd), and lastly imports.
+fc_ets_gdp_final %>% autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),level = c(80, 95), alpha = 0.5) + labs(title    = "ETS Forecast: Log GDP (2026 Q1 – 2027 Q4)", x = NULL, y = "Log GDP") + theme_bw()
 
-fc_ets_dd_final %>%
-  autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
-           level = c(80, 95), alpha = 0.5) +
-  labs(title    = "ETS Forecast: Log Domestic Demand (2026 Q1 – 2027 Q4)",
-       subtitle = "ETS(A,A,N); 80% and 95% prediction intervals",
-       x = NULL, y = "Log Domestic Demand") +
-  theme_bw()
+fc_ets_dd_final %>% autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")), level = c(80, 95), alpha = 0.5) + labs(title    = "ETS Forecast: Log Domestic Demand (2026 Q1 – 2027 Q4)", x = NULL, y = "Log Domestic Demand") + theme_bw()
 
-fc_ets_imp_final %>%
-  autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")),
-           level = c(80, 95), alpha = 0.5) +
-  labs(title    = "ETS Forecast: Log Imports (2026 Q1 – 2027 Q4)",
-       subtitle = "ETS(A,A,N); 80% and 95% prediction intervals",
-       x = NULL, y = "Log Imports") +
-  theme_bw()
+fc_ets_imp_final %>% autoplot(us_clean %>% filter(date >= yearquarter("2020 Q1")), level = c(80, 95), alpha = 0.5) + labs(title    = "ETS Forecast: Log Imports (2026 Q1 – 2027 Q4)", x = NULL, y = "Log Imports") + theme_bw()
 ```
 
 **Analysis:** The above plots have taken the best ETS model based on performance on the test data, and forecasted the long values for each variable 9 quarters into the future. Prediction intervals widen the longer out we go due to unforeseeable shocks. Every model when looking at the confidence intervals and steepness of the forecast lines looks pretty consistent with the data as a whole, so Crawford and I are quite happy with these forecasts.
@@ -412,151 +396,117 @@ ARIMA models use lagged values and lagged errors to capture autocorrelation stru
 #| echo: false
 #| fig-height: 3
 
-us_train %>% ACF(log_gdp,             lag_max = 20) %>% autoplot() +
-  labs(title = "ACF: Log GDP (Levels)") + theme_bw()
-us_train %>% ACF(log_domestic_demand, lag_max = 20) %>% autoplot() +
-  labs(title = "ACF: Log Domestic Demand (Levels)") + theme_bw()
-us_train %>% ACF(log_imports,         lag_max = 20) %>% autoplot() +
-  labs(title = "ACF: Log Imports (Levels)") + theme_bw()
+# Creating an ACF plot of the log version of GDP, with a max of 20 logs shown
+us_train %>% ACF(log_gdp, ag_max = 20) %>% autoplot() + labs(title = "ACF: Log GDP (Levels)") + theme_bw()
+
+# Creating an ACF plot of the log version of domestic demand, with a max of 20 logs shown
+us_train %>% ACF(log_domestic_demand, lag_max = 20) %>% autoplot() + labs(title = "ACF: Log Domestic Demand (Levels)") + theme_bw()
+
+# Creating an ACF plot of the log version of imports, with a max of 20 logs shown
+us_train %>% ACF(log_imports, lag_max = 20) %>% autoplot() + labs(title = "ACF: Log Imports (Levels)") + theme_bw()
 ```
 
 **Analysis:** A slow, linear decay in the ACF is the most obvious sign that the data needs to be transformed. The data is clearly non-stationary, especially since we saw at the very beginning a strong positive trend.
 
 ### KPSS Tests and Recommended Differencing Order
 
-KPSS tests being used below are another way we will be confirming whether our data is stationary for ARIMA use (as it's required). KPSS tests assume a null hypothesis that the data is stationary and that no unit roots are present. We will again use a 0.05 threshold to determine if this criteria is met.
-
 ```{r arima-unitroot}
 #| echo: false
 
-# AI was used here to generate the code for both the KPSS stationarity/unit roots test, performing a unit root test to determine the differencing required, and visualize the results in a clean table!
+# AI was used to generate the code for both the KPSS test and show results
+
+# KPSS tests is another way we will be confirming whether our data is stationary. KPSS tests assume a null hypothesis that the data is stationary and that no unit roots are present. We will again use a 0.05 threshold to determine if this criteria is met.
 
 # KPSS resource used: https://www.statisticshowto.com/kpss-test/
-# Unit Roots + Difference resource used:
-# https://www.rdocumentation.org/packages/feasts/versions/0.5.0/topics/unitroot_ndiffs
 
-# Table 1: KPSS Unit Root Test
-bind_rows(
-  us_train %>% features(log_gdp, unitroot_kpss) %>% mutate(variable = "Log GDP"),
-  us_train %>% features(log_domestic_demand, unitroot_kpss) %>% mutate(variable = "Log Domestic Demand"),
-  us_train %>% features(log_imports, unitroot_kpss) %>% mutate(variable = "Log Imports")) %>% 
+# Table 1: KPSS Unit Root Test, and bind_rows() stiches the results of the KPSS tests for each variable together
+bind_rows( us_train %>% features(log_gdp, unitroot_kpss) %>% mutate(variable = "Log GDP"), us_train %>% features(log_domestic_demand, unitroot_kpss) %>% mutate(variable = "Log Domestic Demand"), us_train %>% features(log_imports, unitroot_kpss) %>% mutate(variable = "Log Imports")) %>% 
   
-  dplyr::select(variable, kpss_stat, kpss_pvalue) %>%
-  knitr::kable(
-    format  = "html",
-    caption = "KPSS Unit Root Test on Log Levels",
-    digits  = 4,
-    col.names = c("Variable", "KPSS Statistic", "P-value")
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13
-  ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#e3f2fd"   # soft blue
-  ) %>%
-  kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e", width = "12em") %>%
+# Again, using the kableExtra package we can form a visually clearer table
+dplyr::select(variable, kpss_stat, kpss_pvalue) %>% knitr::kable(
+ format  = "html", caption = "KPSS Unit Root Test on Log Levels", digits  = 4,
+ col.names = c("Variable", "KPSS Statistic", "P-value")) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, position = "left", font_size = 13) %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", 
+  background = "#e3f2fd") %>% kableExtra::column_spec(1, bold = TRUE, 
+  color = "#1a1a2e", width = "12em") %>% 
   kableExtra::column_spec(2:3, color = "#2c2c2c")
 
-# Table 2: Recommended Differencing Order
-bind_rows(
-  us_train %>% features(log_gdp, unitroot_ndiffs) %>% mutate(variable = "Log GDP"),
-  us_train %>% features(log_domestic_demand, unitroot_ndiffs) %>% mutate(variable = "Log Domestic Demand"),
-  us_train %>% features(log_imports, unitroot_ndiffs) %>% mutate(variable = "Log Imports")
-) %>% 
-  dplyr::select(variable, ndiffs) %>%
-  knitr::kable(
-    format  = "html",
-    caption = "Recommended Order of Differencing (ndiffs)",
-    digits  = 0,
-    col.names = c("Variable", "Differences Required")
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13
-  ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#f1f8e9"   # soft green
-  ) %>%
-  kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e", width = "12em") %>%
-  kableExtra::column_spec(2, color = "#2c2c2c")
+# Table 2: Recommended Differencing Order for each logged variable
+bind_rows(us_train %>% features(log_gdp, unitroot_ndiffs) %>% mutate(variable = "Log GDP"), us_train %>% features(log_domestic_demand, unitroot_ndiffs) %>% mutate(variable = "Log Domestic Demand"), us_train %>% features(log_imports, unitroot_ndiffs) %>% mutate(variable = "Log Imports")) %>% 
+  
+# Again, using the kableExtra package we can form a visually clearer table
+  dplyr::select(variable, ndiffs) %>% knitr::kable(format = "html",
+  caption = "Recommended Order of Differencing (ndiffs)", digits = 0,
+  col.names = c("Variable", "Differences Required")) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, position = "left", font_size = 13) %>%
+  kableExtra::row_spec(0, bold = TRUE,  color = "#1a1a2e", background = "#f1f8e9") %>% kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e", width = "12em") %>% kableExtra::column_spec(2, color = "#2c2c2c")
 ```
 
 **Analysis:** From the KPSS table generated by R, every p-value for each of our logged variables is one, so not only do we reject the null hypothesis, but this confirms we must difference the data and test if the variables are stationary afterward. Moving to the unit root test table and differencing required, the table indicates we need to differentiate each logged variable once to have stationary data.
 
 ### ACF and PACF of First-Differenced Plots
 
-After applying one difference, the ACF and PACF of the differenced series reveal the AR and MA orders.
-
 ```{r arima-acf-pacf-diff}
 #| echo: false
 #| fig-height: 3
 
-us_train %>%
-  mutate(d_log_gdp = difference(log_gdp)) %>%
-  filter(!is.na(d_log_gdp)) %>%
+# After using ndiffs to see the amount of differencing required for each logged variable, we take the difference, then plot the time/ACF/PACF to see if further alterations are needed.
+
+# Creating a gg_tsdisplay() for the first difference of logged GDP
+us_train %>% mutate(d_log_gdp = difference(log_gdp)) %>%
+  filter(!is.na(d_log_gdp)) %>% 
   gg_tsdisplay(d_log_gdp, plot_type = "partial", lag_max = 20) +
   labs(title = "First-Differenced Log GDP: Time Plot, ACF, PACF") + theme_bw()
 
-us_train %>%
-  mutate(d_log_dd = difference(log_domestic_demand)) %>%
+# Creating a gg_tsdisplay() for the first difference of logged domestic demand
+us_train %>% mutate(d_log_dd = difference(log_domestic_demand)) %>%
   filter(!is.na(d_log_dd)) %>%
   gg_tsdisplay(d_log_dd, plot_type = "partial", lag_max = 20) +
-  labs(title = "First-Differenced Log Domestic Demand: Time Plot, ACF, PACF") + theme_bw()
+  labs(title = "First-Differenced Log Domestic Demand: Time Plot, ACF, PACF")   + theme_bw()
 
-us_train %>%
-  mutate(d_log_imp = difference(log_imports)) %>%
+# Creating a gg_tsdisplay() for the first difference of logged imports
+us_train %>% mutate(d_log_imp = difference(log_imports)) %>%
   filter(!is.na(d_log_imp)) %>%
   gg_tsdisplay(d_log_imp, plot_type = "partial", lag_max = 20) +
-  labs(title = "First-Differenced Log Imports: Time Plot, ACF, PACF") + theme_bw()
+  labs(title = "First-Differenced Log Imports: Time Plot, ACF, PACF") +         theme_bw()
 ```
 
 **Analysis:** After first differencing, gg_tsdisplay plots indicate that our data is now stationary. The ACF plots of every differnced log variable have no values crossing the 95% boundary, and the PACF plots have no values that indicate an AR process needed. As such, we can now go forward, layout some ARIMA models, fit them to the test and training data, compare results, then forecast into the future.
 
 ## Fit ARIMA Specifications
 
-Based on the ACF/PACF diagnostics above, three manual specifications are fit alongside the auto-selected model. Seasonal variants are included given the STL-confirmed quarterly seasonality. The variety of models is to make sure that, in case some data wasn't picked, we are covering our bases.
-
 ```{r arima-fit}
 #| echo: true
 #| warning: false
 
-# GDP
-arima_fit_gdp <- us_train %>%
-  model(
-    auto_arima  = ARIMA(log_gdp),
+# Each of the ARIMA models below is applied to the logged variable, with one difference at minimum, and experimenting with AR(1) and MA(1) processes. We also give R the chance to auto-select a model in case our proposed models don't fit the best. 
+
+# ARIMA(0,1,1)(0,0,0): Series takes the first differene then modeled with a single moving-average and no seasonal pattern. 
+
+# ARIMA(0,1,1)(0,1,1): One regular first difference, one regular moving average, one seasonal difference, and a moving avergae in the seasonal part.
+
+# ARIMA(0,1,1)(1,1,0): One regular first difference a regular moving average, one seasonal difference, and a seasonal AR(1).
+
+# For GDP
+arima_fit_gdp <- us_train %>% model(auto_arima  = ARIMA(log_gdp),
     arima_011   = ARIMA(log_gdp ~ 1 + pdq(0,1,1) + PDQ(0,0,0)),
     arima_011s  = ARIMA(log_gdp ~ 1 + pdq(0,1,1) + PDQ(0,1,1)),
-    arima_111s  = ARIMA(log_gdp ~ 1 + pdq(1,1,1) + PDQ(1,1,0))
-  )
+    arima_111s  = ARIMA(log_gdp ~ 1 + pdq(1,1,1) + PDQ(1,1,0)))
 
-# Domestic Demand
-arima_fit_dd <- us_train %>%
-  model(
-    auto_arima  = ARIMA(log_domestic_demand),
+# For domestic demand
+arima_fit_dd <- us_train %>% model(auto_arima  = ARIMA(log_domestic_demand),
     arima_011   = ARIMA(log_domestic_demand ~ 1 + pdq(0,1,1) + PDQ(0,0,0)),
     arima_111   = ARIMA(log_domestic_demand ~ 1 + pdq(1,1,1) + PDQ(0,0,0)),
     arima_011s  = ARIMA(log_domestic_demand ~ 1 + pdq(0,1,1) + PDQ(0,1,1)),
-    arima_111s  = ARIMA(log_domestic_demand ~ 1 + pdq(1,1,1) + PDQ(1,1,0))
-  )
+    arima_111s  = ARIMA(log_domestic_demand ~ 1 + pdq(1,1,1) + PDQ(1,1,0)))
 
-# Imports
-arima_fit_imp <- us_train %>%
-  model(
-    auto_arima  = ARIMA(log_imports),
+# For imports
+arima_fit_imp <- us_train %>% model(auto_arima  = ARIMA(log_imports),
     arima_011   = ARIMA(log_imports ~ 1 + pdq(0,1,1) + PDQ(0,0,0)),
     arima_111   = ARIMA(log_imports ~ 1 + pdq(1,1,1) + PDQ(0,0,0)),
     arima_011s  = ARIMA(log_imports ~ 1 + pdq(0,1,1) + PDQ(0,1,1)),
-    arima_111s  = ARIMA(log_imports ~ 1 + pdq(1,1,1) + PDQ(1,1,0))
-  )
+    arima_111s  = ARIMA(log_imports ~ 1 + pdq(1,1,1) + PDQ(1,1,0)))
 ```
 
 ## ARIMA Model Comparison: AICc and BIC
