@@ -590,7 +590,7 @@ glance(arima_fit_imp) %>%
   kableExtra::row_spec(1, background = "#fffde7")
 ```
 
-**Analysis:** After laying out the different ARIMA model specifications, and then applying them to the US training data, we now have the results to see what models have fitted well. In every table, the lowest AICc model has been highlighted in yellow, which is R's auto-selected model for each.
+**Analysis:** After laying out the different ARIMA model specifications, and then applying them to the US training data, we now have the results to see what models are fitting well. In every table, the lowest AICc model has been highlighted in yellow, which is R's auto-selected model for each.
 
 ```{r arima-report}
 #| echo: false
@@ -668,7 +668,7 @@ ljung_box_results %>%
   column_spec(3, color = ifelse(ljung_box_results$lb_pvalue < 0.05, "red", "black"))
 ```
 
-**Analysis:** In all of our Ljung-Box tests for the first difference logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9396, 0.8730, and 0.4611 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation and that we can proceed with ARIMA model analysis.
+**Analysis:** In all of our Ljung-Box tests for the first difference logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9396, 0.8730, and 0.4611 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation thus we can proceed with ARIMA model analysis.
 
 ## ARIMA Forecast on Test Set (2024 Q1 – 2025 Q4)
 
@@ -711,7 +711,7 @@ arima_accuracy %>%
 
 ```
 
-Now we take all our ARIMA models after apply to training data, and applying them to the test data to determine what specifications will be best for forecasting future values. With the r code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For the differenced log of domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
+Now we take all our ARIMA models after training them, and apply them to the test data to determine what specifications will be best for forecasting future values. With the R code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For the differenced log of domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
 
 ```{r arima-forecast-plots}
 #| echo: false
@@ -745,7 +745,7 @@ fc_arima_imp %>%
   theme_bw()
 ```
 
-**Analysis:** Above is the forecasts of the ARIMA models on the test data, and we see the results of our best performing ARIMA models for each variable in the plots above. In each of the forecasts, the 95% and 80% confidence intervals all contain the real data, and the ARIMA model forecasts. Each forecast is close to the actual data, so our ARIMA specifications have worked quite well. Like the previous ETS modeling on the test data with logged imports, the spike in the test data is barely contained in the 80% confidence interval.
+**Analysis:** Above is the forecasts of the ARIMA models on the test data, and we see the results of our best performing ARIMA models for each variable. In all the forecasts the 95% and 80% confidence intervals all contain the real data and the ARIMA model forecasts. Each forecast is close to the actual data, so our ARIMA specifications have worked quite well. Like the previous ETS modeling on the test data with logged imports, the spike in the test data is barely contained in the 80% confidence interval.
 
 ## ARIMA Forecast Beyond Last Observation (2026 Q1 – 2027 Q4)
 
@@ -790,7 +790,7 @@ fc_arima_imp_final %>%
 
 # VAR Modelling
 
-VAR (Vector Auto-regression) jointly models all three variables as a system, allowing each variable's forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that univariate ETS and ARIMA cannot.
+VAR (Vector Auto-regression) jointly models all three variables as a system, allowing each variable's forecast to be informed by the lagged values of the others. This captures cross-variable dynamics (e.g., imports responding to GDP growth with a lag) that uni-variate ETS and ARIMA models cannot.
 
 VAR requires **stationary** inputs. Because all three log series have unit roots (difference = 1), we work with first-differenced log series.
 
@@ -817,7 +817,7 @@ train_mat <- us_train_diff %>%
   as.matrix()
 ```
 
-## Stationarity Check on Differenced Series
+## Stationality Check on Differenced Series
 
 ```{r var-stationarity}
 #| echo: false
@@ -851,7 +851,13 @@ bind_rows(
   kableExtra::column_spec(2:3, color = "#2c2c2c")
 ```
 
-**Analysis:** All our p-values are P-values are well above 0.05, so we fail to reject the null hypothesis that our data is stationary. We do not need a second difference according to the KPSS and p-value, so we can proceed on analysis.
+```{r VAR_Dicky-Fuller_Tests}
+us_train_diff %>% features(d_log_gdp, unitroot_ndiffs)
+us_train_diff %>% features(d_log_dd, unitroot_ndiffs)
+us_train_diff %>% features(d_log_imports, unitroot_ndiffs)
+```
+
+**Analysis:** Although our KPSS test p-values are below 0.05, which technically rejects stationarity, we are still going to move forward with our VAR model. The KPSS test is well documented to be overly sensitive to sudden shifts or 'structural breaks' in the data. In our case, the massive economic shocks from the 2008 financial crisis and the 2020 COVID-19 pandemic are likely throwing the test off. We feel confident moving forward because our other diagnostics contradict the KPSS test: the ADF tests (above) show that no more differencing is needed, and the ACF plots (below) look like clean, stationary white noise.
 
 ## ACF of Differenced Series
 
@@ -867,7 +873,7 @@ us_train_diff %>% ACF(d_log_imports, lag_max = 16) %>% autoplot() +
   labs(title = "ACF: Δ Log Imports") + theme_bw()
 ```
 
-**Analysis:** Setting the lag amount to 16 and generating an ACF plot for each variable, we see that the differenced and logged variables have no ACF values cross the 95% boundary. This is again a confirmation that our data is stationary, and that we may proceed on analysis.
+**Analysis:** Setting the lag amount to 16 and generating an ACF plot for each variable, we see that the differenced and logged variables have no ACF values cross the 95% boundary. This is again a confirmation that our data is stationary, and that we may proceed to our analysis.
 
 ## VAR Lag Selection
 
@@ -887,7 +893,7 @@ lag_select$selection
 
 ## Fit VAR Specifications (vars package)
 
-Below, using the vars package, we can observe the specifications using different lags from the previous code chunk's table. For our purposes, we are looking at the VAR of the training data with the model, with lag 2.
+Below, using the vars package, we can observe the specifications using different lags from the previous code chunk's table. For our purposes, we are looking at the VAR of the training data with a 2 lag model.
 
 ```{r var-fit-vars}
 #| echo: true
@@ -902,7 +908,7 @@ var_p4 <- VAR(train_mat, p = 2, type = "const")
 summary(var_p2)
 ```
 
-**Crawford verify this interpretation:** The VAR(2) model is dynamically stable with all characteristic roots below 1.0. In the GDP and domestic demand equations, lags are significantly negative, lagged domestic demand positively predicts GDP, and the constants are highly significant at \~0.69% and \~0.68% quarterly growth respectively. The imports equation is weakest with no lag being significant and the joint F-test fails (p = 0.147), suggesting imports behave as exogenous to the system. Most notably, residual correlations are extremely high (0.985 between GDP and domestic demand, 0.86–0.91 with imports), indicating the three variables are driven by a common trend.
+**Analysis**: The VAR(2) model is stable since all the characteristic roots are well below 1.0. In both the GDP and domestic demand equations, the variables' own past lags are significantly negative, which basically means that after a couple of quarters of high growth, the economy tends to cool back down. Interestingly, past domestic demand doesn't actually predict GDP, but past GDP growth does significantly drive current domestic demand. The imports equation is definitely the weakest link. None of its individual lags are statistically significant, and the overall F-test fails ($p = 0.147$), meaning import growth is essentially behaving like unpredictable white noise in this model. The most interesting part of the output is the residual correlations at the bottom, which are very high (0.985 between GDP and domestic demand, and around 0.86 to 0.91 for imports). Since we already removed the long-term trends by differencing the data earlier, these high numbers show that all three variables are reacting violently and instantly to the exact same economic shocks in the exact same quarter
 
 ## VAR Residual Diagnostics
 
@@ -956,7 +962,7 @@ resid_tsibble %>%
   labs(title = "VAR(1) Residual Diagnostics: Δ Log Imports") + theme_bw()
 ```
 
-**Analysis:** These plots isolate each equation's variable residuals. Again, like previous gg_tsresiduals plots our time series data clearly shows the COVID-19 shock but our data continues hovering around the mean of 0. All ACF plots for every variable have ACF values within the 95% boundary, so no autocorrelation to remove. The distribution of residuals is also normal, with clear outliers most likely from the COVID pandemic data.
+**Analysis:** These plots isolate each equation's variable residuals. Again, like previous gg_tsresiduals plots our time series data clearly shows the COVID-19 and Financial Crisis shocks but our data continues hovering around the mean of 0. All ACF plots for every variable have ACF values within the 95% boundary, so no autocorrelation to remove. The distribution of residuals is also normal, with clear outliers most likely from the COVID pandemic data and Financial Crisis.
 
 ## Fit VAR via fable (for AICc/BIC and forecast pipeline)
 
@@ -1049,7 +1055,7 @@ fc_var_test %>%
   )
 ```
 
-**Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that's a good sign. Unlike the ETS and ARIMA analysis previously, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph an values fluctuate more than the GDP and domestic demand values.
+**Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that's a good sign. Unlike the ETS and ARIMA analysis previously, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph's values fluctuate more than the GDP and domestic demand values.
 
 ## VAR Forecast on Test Set — Back-Transformed to Levels
 
@@ -1340,17 +1346,15 @@ unified_acc %>%
 
 **Note:** VAR accuracy is measured on the differenced log scale while ETS and ARIMA are on the log level scale — RMSE values are not directly comparable across methods. Within each variable, compare ETS vs ARIMA (same scale). The VAR comparison is informative for understanding the differenced growth forecast quality separately.
 
-**Analysis:** For each variable, identify which method achieves the lowest RMSE and lowest MAPE on the test set. If ETS wins on one criterion and ARIMA on another, both can be retained as "well-fitting" models for the final forward forecast. The VAR's value is in capturing joint dynamics across variables rather than minimizing univariate forecast error.
+**Analysis:** From the two tables above we see that the ARIMA model wins when it comes to forecasting log domestic demand, ARIMA and ETS tie when it comes to forecasting GDP, and ETS wins when it comes to forecasting import data.
 
 ## Final Model Selection Summary
 
 | Variable | Best by AICc (within family) | Best by RMSE (test set) | Recommendation |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 | Either model is defensible; use **auto ETS (M,A,N)** for simplicity since it also has the best in-family AICc and matches ARIMA on test performance |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA (auto, RMSE = 0.0052)** edges ETS (0.0055) | **Auto ARIMA (0,1,0) w/ drift** — wins on both test RMSE and in-family AICc |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS (ets_AAN, RMSE = 0.0396)** beats ARIMA (0.0411) | **ETS(A,A,N)** — wins on test RMSE; imports are volatile enough that the simpler ETS trend model generalizes better than ARIMA |
-
-**Note:** Fill in this table after rendering based on your AICc tables and the accuracy table above.
 
 # Conclusion
 
