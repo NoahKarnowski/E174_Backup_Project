@@ -1266,13 +1266,90 @@ if (nrow(tbl_var) == 0) {
 
 **Analysis:** From the two tables above we see that the ARIMA model wins when it comes to forecasting log domestic demand, ARIMA and ETS tie when it comes to forecasting GDP, and ETS wins when it comes to forecasting import data.
 
-## Comparing Model Results - Training and Test Data
+# Comparing Results - Training and Test Data
 
 | Variable | Best by AICc (within family) | Best RMSEs (test set) |   |
-|----|----|----|----|
+|-----------------|---------------------|------------------|-----------------|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 |  |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA auto-selected, RMSE = 0.0052** |  |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS(A,A,N) where RMSE, 0.0396** |  |
+
+# Cross Validation Tests
+
+```{r cv-ets-arima}
+#| echo: false
+
+# Claude Code Here...
+
+## Time Series Cross-Validation: ETS vs ARIMA
+# stretch_tsibble creates an expanding window starting at min_size = 72 quarters
+# (2000 Q1 – 2017 Q4), keeping every fold pre-COVID at the origin point.
+# Each fold steps forward by 1 quarter (step = 1) through to the end of us_train.
+# h = 8 matches the test set horizon directly for a fair comparison.
+
+#| echo: true
+#| warning: false
+#| message: false
+
+# --- Step 1: Create the expanding-window CV folds from the training data ---
+us_cv <- us_train %>%
+  stretch_tsibble(.init = 72, .step = 1)
+
+# --- Step 2: Fit the best ETS and ARIMA spec per variable across all CV folds ---
+# ETS: auto for GDP, AAN for domestic demand and imports (test-set winners)
+# ARIMA: auto_arima for all three (same RMSE as arima_011 for GDP/imports)
+cv_fit <- us_cv %>%
+  model(
+    ets_gdp  = ETS(log_gdp),
+    ets_dd   = ETS(log_domestic_demand ~ error("A") + trend("A") + season("N")),
+    ets_imp  = ETS(log_imports          ~ error("A") + trend("A") + season("N")),
+    arima_gdp = ARIMA(log_gdp),
+    arima_dd  = ARIMA(log_domestic_demand),
+    arima_imp = ARIMA(log_imports)
+  )
+
+# --- Step 3: Generate h = 8 forecasts from every fold ---
+cv_fc <- cv_fit %>% forecast(h = 8)
+
+# --- Step 4: Compute CV accuracy per model and reshape for clean comparison ---
+cv_accuracy <- cv_fc %>%
+  group_by(.id, .model) %>%
+  accuracy(us_train) %>%
+  group_by(.model) %>%
+  summarise(
+    RMSE = mean(RMSE, na.rm = TRUE),
+    MAE  = mean(MAE,  na.rm = TRUE),
+    MAPE = mean(MAPE, na.rm = TRUE)
+  ) %>%
+  mutate(
+    variable = case_when(
+      grepl("gdp", .model) ~ "Log GDP",
+      grepl("dd",  .model) ~ "Log Domestic Demand",
+      grepl("imp", .model) ~ "Log Imports"
+    ),
+    method = ifelse(grepl("ets", .model), "ETS", "ARIMA")
+  ) %>%
+  dplyr::select(variable, method, RMSE, MAE, MAPE) %>%
+  arrange(variable, RMSE)
+
+# --- Step 5: Render comparison table ---
+cv_accuracy %>%
+  knitr::kable(
+    format    = "html",
+    caption   = "Time Series CV Accuracy: ETS vs ARIMA (Expanding Window, h = 8)",
+    digits    = 4,
+    col.names = c("Variable", "Method", "RMSE", "MAE", "MAPE")
+  ) %>%
+  kableExtra::kable_styling(
+    bootstrap_options = "bordered",
+    full_width        = FALSE,
+    position          = "left",
+    font_size         = 13
+  ) %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#d6e4f0") %>%
+  kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
+  kableExtra::column_spec(2:5, color = "#2c2c2c")
+```
 
 # Conclusion
 
