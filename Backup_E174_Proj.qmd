@@ -1269,10 +1269,10 @@ if (nrow(tbl_var) == 0) {
 ## Comparing Model Results - Training and Test Data
 
 | Variable | Best by AICc (within family) | Best RMSEs (test set) |   |
-|------------------|---------------------------|-----------------------|----|
+|----|----|----|----|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 |  |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA auto-selected, RMSE = 0.0052** |  |
-| Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS(A,A,N) where RMSE,  0.0396** |  |
+| Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS(A,A,N) where RMSE, 0.0396** |  |
 
 # Conclusion
 
