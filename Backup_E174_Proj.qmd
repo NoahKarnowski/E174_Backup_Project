@@ -1214,57 +1214,57 @@ unified_acc <- bind_rows(ets_acc, arima_acc, var_acc) %>%
   arrange(variable, RMSE)
 
 # ── Table 1: ETS & ARIMA
-unified_acc %>%
-  filter(method %in% c("ETS", "ARIMA")) %>%
-  knitr::kable(
-    format  = "html",
-    digits  = 4,
-    caption = "Forecast Accuracy: ETS vs ARIMA on Test Set"
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13,
-    html_font         = "Helvetica"
-  ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#d6e4f0"   # soft steel blue header
-  ) %>%
-  kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
-  kableExtra::column_spec(2:6, color = "#2c2c2c")
+tbl_data <- unified_acc %>% dplyr::filter(method %in% c("ETS", "ARIMA"))
+n_cols   <- ncol(tbl_data)
 
-# ── Table 2: VAR 
-unified_acc %>%
-  filter(method == "VAR") %>%
-  knitr::kable(
-    format  = "html",
-    digits  = 4,
-    caption = "Forecast Accuracy: VAR on Test Set"
-  ) %>%
+tbl_data %>%
+  knitr::kable(format = "html", digits = 4,
+               caption = "Forecast Accuracy: ETS vs ARIMA on Test Set") %>%
   kableExtra::kable_styling(
     bootstrap_options = c("striped", "hover", "condensed"),
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13,
-    html_font         = "Helvetica"
+    full_width = FALSE, position = "left",
+    font_size = 13, html_font = "Helvetica"
   ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#d8ead3"   # soft sage green header
-  ) %>%
+  kableExtra::row_spec(0, bold = TRUE,
+                       color = "#1a1a2e", background = "#d6e4f0") %>%
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
-  kableExtra::column_spec(2:6, color = "#2c2c2c")
+  kableExtra::column_spec(2:n_cols, color = "#2c2c2c")
+# ── Table 2: VAR 
+tbl_var <- unified_acc %>% dplyr::filter(method == "VAR")
+n_cols  <- ncol(tbl_var)
+
+if (nrow(tbl_var) == 0) {
+  message("No VAR rows found in unified_acc — check method labels.")
+} else {
+  tbl_var %>%
+    knitr::kable(
+      format  = "html",
+      digits  = 4,
+      caption = "Forecast Accuracy: VAR on Test Set"
+    ) %>%
+    kableExtra::kable_styling(
+      bootstrap_options = c("striped", "hover", "condensed"),
+      full_width        = FALSE,
+      position          = "left",
+      font_size         = 13,
+      html_font         = "Helvetica"
+    ) %>%
+    kableExtra::row_spec(
+      0,
+      bold       = TRUE,
+      color      = "#1a1a2e",
+      background = "#d8ead3"
+    ) %>%
+    kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
+    kableExtra::column_spec(2:n_cols, color = "#2c2c2c")
+}
 ```
 
 **Note:** VAR accuracy is measured on the differenced log scale while ETS and ARIMA are on the log level scale — RMSE values are not directly comparable across methods. Within each variable, compare ETS vs ARIMA (same scale). The VAR comparison is informative for understanding the differenced growth forecast quality separately.
 
 **Analysis:** From the two tables above we see that the ARIMA model wins when it comes to forecasting log domestic demand, ARIMA and ETS tie when it comes to forecasting GDP, and ETS wins when it comes to forecasting import data.
 
-## Comparing Model Results - Training and Test Sets
+## Comparing Model Results - Training and Test Data
 
 | Variable | Best by AICc (within family) | Best RMSEs (test set) |   |
 |------------------|---------------------------|-----------------------|----|
