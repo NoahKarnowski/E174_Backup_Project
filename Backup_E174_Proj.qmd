@@ -1183,7 +1183,7 @@ fc_var_final_levels %>% ggplot(aes(x = date, y = log_level_fc)) +
 ```{r model-comparison}
 #| echo: false
 
-# Perplexity here helped to troubleshoot loading the tables.
+# Perplexity helped us to fix the code of the kableExtra code so it loads properly
 
 # Best ETS and ARIMA by AICc for each variable — use auto models as proxy
 ets_acc <- bind_rows(
@@ -1271,7 +1271,7 @@ if (nrow(tbl_var) == 0) {
 | Variable | Best by AICc (within family) | Best RMSEs (test set) |   |
 |------------------|---------------------------|-----------------------|----|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 |  |
-| Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **VAR Method, RMSE = 0.0043** |  |
+| Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA auto-selected, RMSE = 0.0052** |  |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS(A,A,N) where RMSE,  0.0396** |  |
 
 # Conclusion
@@ -1280,6 +1280,6 @@ if (nrow(tbl_var) == 0) {
 
 All three US national variables of GDP, domestic demand, and imports have a strong positive trend with very little seasonality. The variance is also consistent besides the 2008 and 2020 recessions. The log transformation helps to minimize those two shocks, and taking the first difference gave us the stationary data we needed to proceed with analysis. KPSS tests also helped to confirm seasonality, a lack of unit roots present, and how many differences were required. Portmanteau tests confirmed our data has white noise as the remainder, and our ACF and PACF plots acted as visual representations of these checks.
 
-Since we split the data into training and test sets, we can compare the RMSE values of those results for each variable. For our logged and differenced GDP, the ETS(M,A,N) and ARIMA(0,1,1) both had an RMSE of 0.0034 which was the lowest out of all forecast options. For logged and differenced domestic demand, the VAR method had the lowest RMSE out of other forecast methods. For the logged and differenced imports, the ETS(A,A,N) or additive errors, additive trend, and no seasonality performed the best. This might be because since imports are volatile without seasonality but have an upward trend, only errors and trend parameters had to be included. The simple model forecasts on the test data are extremely close to the real data (excluding imports), which is consistent with the 2006 FORECASTING TRADE paper that argues simple models can do better forecasting future values. With imports, the US is especially volatile given tariffs and trade wars, so we suspect that's why our simple models struggled to fit accurately to the test data.
+Since we split the data into training and test sets, we can compare the RMSE values of those results for each variable. For our logged and differenced GDP, the ETS(M,A,N) and ARIMA(0,1,1) both had an RMSE of 0.0034 which was the lowest out of all forecast options. For logged and differenced domestic demand, the auto selected ARIMA model with specifications of ARIMA(0,1,0) with drift had the lowest RMSE out of other forecast methods. For the logged and differenced imports, the ETS(A,A,N) or additive errors, additive trend, and no seasonality performed the best. This might be because since imports are volatile without seasonality but have an upward trend, only errors and trend parameters had to be included. The simple model forecasts on the test data are extremely close to the real data (excluding imports), which is consistent with the 2006 FORECASTING TRADE paper that argues simple models can do better forecasting future values. With imports, the US is especially volatile given tariffs and trade wars, so we suspect that's why our simple models struggled to fit test data and future forecasts.
 
 Our group believes that the 2008 and larger 2020 recessions have affected our data because on the STL decomposition and residual analysis plots, the time graphs show significant drops during those points. The outlier data could have impacted our values negatively when being trained, so going forward editing those values with estimations might be helpful.
