@@ -1345,7 +1345,7 @@ unified_acc %>%
 ## Final Model Selection Summary
 
 | Variable | Best by AICc (within family) | Best by RMSE (test set) | Recommendation |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 | Either model is defensible; use **auto ETS (M,A,N)** for simplicity since it also has the best in-family AICc and matches ARIMA on test performance |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA (auto, RMSE = 0.0052)** edges ETS (0.0055) | **Auto ARIMA (0,1,0) w/ drift** — wins on both test RMSE and in-family AICc |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS (ets_AAN, RMSE = 0.0396)** beats ARIMA (0.0411) | **ETS(A,A,N)** — wins on test RMSE; imports are volatile enough that the simpler ETS trend model generalizes better than ARIMA |
@@ -1354,7 +1354,7 @@ unified_acc %>%
 
 # Conclusion
 
-**Summary of Findings:**
+**Summary of Findings: –\> Compare test data fittings from last code chunk, and lowest RMSE does best!**
 
 All three US national variables of GDP, domestic demand, and imports have a strong positive trend with very little seasonality. The variance is also consistent besides the 2008 and 2020 recessions. The log transformation helps to minimize those two shocks, and taking the first difference gave us the stationary data we needed to proceed with analysis. KPSS tests also helped to confirm seasonality, a lack of unit roots present, and how many differences were required. Portmanteau tests confirmed our data has white noise as the remainder, and our ACF and PACF plots acted as visual representations of these checks.
 
