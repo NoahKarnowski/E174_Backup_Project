@@ -155,7 +155,7 @@ us_clean %>% model(STL(log_imports ~ trend(window = 13) + season(window = "perio
 ```{r train-test}
 #| echo: true
 
-# In order to compare our models and test them, we have split our data up by the following dates.
+# In order to compare our models and test them, we have split our data into training and test sets.
 
 # Training: 2000 Q1 – 2023 Q4  =  96 quarters
 us_train <- us_clean %>% filter(date <= yearquarter("2023 Q4"))
@@ -240,7 +240,7 @@ ets_fit_dd %>% dplyr::select(auto_ets, .model_desc = 2) %>% print()
 ets_fit_imp %>% dplyr::select(auto_ets, .model_desc = 2) %>% print()
 ```
 
-**Analysis:** Lower AICc indicates a better fitting model, and here R's auto-selected model performed the best with every variable. We were right with the first manually selected model of having an additive trend and no seasonality, but no dampening was present in these ETS models. Every auto-selected model by R has the same specifications of ETS(M,A,N), or multiplicative errors, additive trend, and no seasonality.
+**Analysis:** Lower AICc indicates a better fitting model, and here R's auto-selected model performed the best with every variable. We were right with the first manually selected model of having an additive trend and no seasonality, but no dampening was present in these ETS models. Every auto-selected model by R has the same specifications of ETS(M,A,N), or multiplicative errors, additive trend, and no seasonality. Additive trend is expected here as all our basic time plots without adjustments show a constant upward growth.
 
 ## ETS Residual Diagnostics
 
@@ -530,14 +530,10 @@ glance(arima_fit_gdp) %>%
     position          = "left",
     font_size         = 13
   ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#e8f4f8"   # soft sky blue
-  ) %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#e8f4f8") %>%
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c") %>%
-  kableExtra::row_spec(1, background = "#fffde7")  # highlight best model (lightest yellow)
+  kableExtra::row_spec(1, background = "#fffde7")
 
 # Table 2: Log Domestic Demand
 glance(arima_fit_dd) %>%
@@ -555,11 +551,7 @@ glance(arima_fit_dd) %>%
     position          = "left",
     font_size         = 13
   ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#f3e5f5"   # soft lavender
-  ) %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#f3e5f5") %>%
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c") %>%
   kableExtra::row_spec(1, background = "#fffde7")
@@ -580,11 +572,7 @@ glance(arima_fit_imp) %>%
     position          = "left",
     font_size         = 13
   ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#e8f5e9"   # soft mint green
-  ) %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#e8f5e9") %>%
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c") %>%
   kableExtra::row_spec(1, background = "#fffde7")
@@ -618,16 +606,13 @@ ARIMA(0,1,0) –\> AR(0), 1 difference, MA(0)
 #| echo: false
 #| fig-height: 5
 
-arima_fit_gdp %>% dplyr::select(auto_arima) %>%
-  gg_tsresiduals() +
+arima_fit_gdp %>% dplyr::select(auto_arima) %>% gg_tsresiduals() +
   labs(title = "ARIMA Residual Diagnostics: Log GDP") + theme_bw()
 
-arima_fit_dd %>% dplyr::select(auto_arima) %>%
-  gg_tsresiduals() +
+arima_fit_dd %>% dplyr::select(auto_arima) %>% gg_tsresiduals() +
   labs(title = "ARIMA Residual Diagnostics: Log Domestic Demand") + theme_bw()
 
-arima_fit_imp %>% dplyr::select(auto_arima) %>%
-  gg_tsresiduals() +
+arima_fit_imp %>% dplyr::select(auto_arima) %>% gg_tsresiduals() +
   labs(title = "ARIMA Residual Diagnostics: Log Imports") + theme_bw()
 ```
 
@@ -663,9 +648,9 @@ ljung_box_results %>%
     position   = "center",
     font_size  = 13
   ) %>%
-  row_spec(0, bold = TRUE, background = "#dce6f1") %>%
-  column_spec(1, bold = TRUE) %>%
-  column_spec(3, color = ifelse(ljung_box_results$lb_pvalue < 0.05, "red", "black"))
+  kableExtra::row_spec(0, bold = TRUE, background = "#dce6f1") %>%
+  kableExtra::column_spec(1, bold = TRUE) %>%
+  kableExtra::column_spec(3, color = ifelse(ljung_box_results$lb_pvalue < 0.05, "red", "black"))
 ```
 
 **Analysis:** In all of our Ljung-Box tests for the first difference logged GDP, domestic demand, and imports we see a p-value above 0.05. We get 0.9396, 0.8730, and 0.4611 for each of our values respectively, and because they are above 0.05 we fail to reject the null hypothesis. In other words, our data has again been verified to have no autocorrelation thus we can proceed with ARIMA model analysis.
@@ -702,13 +687,11 @@ arima_accuracy %>%
     position   = "center",
     font_size  = 13
   ) %>%
-  row_spec(0, bold = TRUE, background = "#dce6f1") %>%
-  column_spec(1:2, bold = TRUE) %>%
-  column_spec(3, color = ifelse(
+  kableExtra::row_spec(0, bold = TRUE, background = "#dce6f1") %>%
+  kableExtra::column_spec(1:2, bold = TRUE) %>%
+  kableExtra::column_spec(3, color = ifelse(
     arima_accuracy$RMSE == ave(arima_accuracy$RMSE, arima_accuracy$variable, FUN = min),
     "blue", "black"))
-
-
 ```
 
 Now we take all our ARIMA models after training them, and apply them to the test data to determine what specifications will be best for forecasting future values. With the R code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For the differenced log of domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
@@ -800,21 +783,15 @@ VAR requires **stationary** inputs. Because all three log series have unit roots
 #| echo: true
 
 us_clean_diff <- us_clean %>%
-  mutate(
-    d_log_gdp     = difference(log_gdp),
-    d_log_dd      = difference(log_domestic_demand),
-    d_log_imports = difference(log_imports)
-  ) %>%
+  mutate(d_log_gdp = difference(log_gdp), d_log_dd = difference(log_domestic_demand), d_log_imports = difference(log_imports)) %>%
   filter(!is.na(d_log_gdp))
 
 us_train_diff <- us_clean_diff %>% filter(date <= yearquarter("2023 Q4"))
 us_test_diff  <- us_clean_diff %>% filter(date >= yearquarter("2024 Q1"))
 
 # Remove tsibble key for vars package compatibility
-train_mat <- us_train_diff %>%
-  as_tibble() %>%
-  dplyr::select(d_log_gdp, d_log_dd, d_log_imports) %>%
-  as.matrix()
+train_mat <- us_train_diff %>% as_tibble() %>%
+  dplyr::select(d_log_gdp, d_log_dd, d_log_imports) %>% as.matrix()
 ```
 
 ## Stationality Check on Differenced Series
@@ -842,11 +819,7 @@ bind_rows(
     position          = "left",
     font_size         = 13
   ) %>%
-  kableExtra::row_spec(0,
-                       bold       = TRUE,
-                       color      = "#1a1a2e",
-                       background = "#e1f5fe"   # soft cyan
-  ) %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#e1f5fe") %>%
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e", width = "10em") %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c")
 ```
@@ -1269,89 +1242,10 @@ if (nrow(tbl_var) == 0) {
 # Comparing Results - Training and Test Data
 
 | Variable | Best by AICc (within family) | Best RMSEs (test set) |   |
-|----|----|----|----|
+|------------------|-------------------|------------------|------------------|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 |  |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA auto-selected, RMSE = 0.0052** |  |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS(A,A,N) where RMSE, 0.0396** |  |
-
-# Cross Validation Tests
-
-```{r cv-ets-arima}
-#| echo: false
-#| warning: false
-#| message: false
-
-
-# --- Step 1: Create the expanding-window CV folds from the training data ---
-us_cv <- us_train %>%
-  stretch_tsibble(.init = 72, .step = 1)
-
-# --- Step 2: Fit the best ETS and ARIMA spec per variable across all CV folds ---
-cv_fit_gdp <- us_cv %>%
-  model(
-    ets_gdp   = ETS(log_gdp),
-    arima_gdp = ARIMA(log_gdp)
-  )
-
-cv_fit_dd <- us_cv %>%
-  model(
-    ets_dd   = ETS(log_domestic_demand ~ error("A") + trend("A") + season("N")),
-    arima_dd = ARIMA(log_domestic_demand)
-  )
-
-cv_fit_imp <- us_cv %>%
-  model(
-    ets_imp   = ETS(log_imports ~ error("A") + trend("A") + season("N")),
-    arima_imp = ARIMA(log_imports)
-  )
-
-# --- Step 3: Generate h = 8 forecasts from every fold ---
-# FIX: forecast each mable separately, then bind into one data frame
-cv_fc <- bind_rows(
-  cv_fit_gdp %>% forecast(h = 8),
-  cv_fit_dd  %>% forecast(h = 8),
-  cv_fit_imp %>% forecast(h = 8)
-)
-
-# --- Step 4: Compute CV accuracy per model and reshape for clean comparison ---
-# FIX: call accuracy() first, then group_by(.model) to average across folds
-cv_accuracy <- cv_fc %>%
-  accuracy(us_train) %>%
-  group_by(.model) %>%
-  summarise(
-    RMSE = mean(RMSE, na.rm = TRUE),
-    MAE  = mean(MAE,  na.rm = TRUE),
-    MAPE = mean(MAPE, na.rm = TRUE)
-  ) %>%
-  mutate(
-    variable = case_when(
-      grepl("gdp", .model) ~ "Log GDP",
-      grepl("dd",  .model) ~ "Log Domestic Demand",
-      grepl("imp", .model) ~ "Log Imports"
-    ),
-    method = ifelse(grepl("ets", .model), "ETS", "ARIMA")
-  ) %>%
-  dplyr::select(variable, method, RMSE, MAE, MAPE) %>%
-  arrange(variable, RMSE)
-
-# --- Step 5: Render comparison table ---
-cv_accuracy %>%
-  knitr::kable(
-    format    = "html",
-    caption   = "Time Series CV Accuracy: ETS vs ARIMA (Expanding Window, h = 8)",
-    digits    = 4,
-    col.names = c("Variable", "Method", "RMSE", "MAE", "MAPE")
-  ) %>%
-  kableExtra::kable_styling(
-    bootstrap_options = "bordered",
-    full_width        = FALSE,
-    position          = "left",
-    font_size         = 13
-  ) %>%
-  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#d6e4f0") %>%
-  kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
-  kableExtra::column_spec(2:5, color = "#2c2c2c")
-```
 
 # Conclusion
 
