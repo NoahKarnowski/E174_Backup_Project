@@ -19,7 +19,6 @@ AI, specifically Claude, Perplexity, and Gemini were consulted with to troublesh
 # Basic Setup
 
 ```{r setup}
-#| label: setup
 #| echo: true
 #| message: false
 #| warning: false
@@ -86,8 +85,7 @@ us_clean <- US_DD %>% left_join(US_GDP, by = c("date", "country")) %>%
 us_clean <- us_clean %>% mutate(log_gdp = log(gdp), 
     log_domestic_demand = log(domestic_demand), log_imports  = log(imports))
 
-# Offering a quick look at the structure of our central tsibble data frame
-
+# Offering a quick look at the structure of our central tsibble data frame=
 glimpse(us_clean)
 ```
 
@@ -110,7 +108,7 @@ us_clean %>% pivot_longer(cols = c(gdp, domestic_demand, imports),
   x = NULL, y = "Value (Millions)") + theme_bw()
 ```
 
-**Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial crisis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and different variances across time indicate the logged version of each variable should be taken.
+**Analysis:** All three series exhibit clear upward trends with a visible drops around 2008 for the global financial crisis and another drop in 2020 for the COVID pandemic. Imports show the most volatility of the three. The upward drift and changing variances across time indicate the logged version of each variable should be taken.
 
 ## Log-Transformed Series
 
@@ -127,7 +125,7 @@ us_clean %>% pivot_longer(cols = c(log_gdp, log_domestic_demand, log_imports),
   y = "Log Value") + theme_bw()
 ```
 
-**Analysis:** Log transforming each variable did make the lines smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likely impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.
+**Analysis:** Log transforming each variable did make the lines slightly smoother, however the strong upward trend remains. The COVID-19 pandemic and the massive drop in value for each variable, will most likely impact the forecast variables. In more statistical terms, the COVID-19 pandemic created outliers in the data here.
 
 ## STL Decomposition
 
@@ -150,7 +148,7 @@ us_clean %>% model(STL(log_imports ~ trend(window = 13) + season(window = "perio
   labs(title = "STL Decomposition: Log Imports") + theme_bw()
 ```
 
-**Analysis:** All three series share the same decomposition pattern of a clear positive trend, consistent seasonal patterns, and a remainder that hovers around 0 (the mean) until the COVID-19 pandemic. The seasonal component is highly consistent across time, so additive instead of multiplicative seasonality should be present in our ETS models. When we use R and other tests to pick the best ETS decomposition, we will know for sure what specifications are needed.
+**Analysis:** All three series share the same decomposition pattern of a clear positive trend, periodic seasonal patterns, and a remainder that hovers around mean 0 until the COVID-19 pandemic. Since our seasonal component here is set to periodic and other inputs failed to load, we will be using an additive seasonality as needed in our models. When we use R and other tests to pick the best ETS decomposition, we will know for sure what specifications are needed.
 
 # Training and Testing Split
 
@@ -166,7 +164,7 @@ us_train <- us_clean %>% filter(date <= yearquarter("2023 Q4"))
 us_test  <- us_clean %>% filter(date >= yearquarter("2024 Q1"))
 ```
 
-We need to have our training data include 2020 completely as that year had outlier data which could skew test performance. If we included all quarters up to 2020, then 2020 to 2025 was test data, then our forecasts on the test data would struggle to accommodate all the fluctuations.
+**Analysis:** We need to have our training data include 2020 completely as that year had outlier data which could skew test performance. If we included all quarters up to 2020 and 2020 to 2025 was test data, then our forecasts on the test data would be skewed by outliers.
 
 # ETS Modelling
 
@@ -183,26 +181,19 @@ ETS (Error, Trend, and Seasonal) models decompose a series into three exponentia
 
 # GDP 
 ets_fit_gdp <- us_train %>%
-  model(
-    auto_ets = ETS(log_gdp),
-    ets_AAN  = ETS(log_gdp ~ error("A") + trend("A")  + season("N")),
-    ets_AAdN = ETS(log_gdp ~ error("A") + trend("Ad") + season("N")),
-    ets_AAA  = ETS(log_gdp ~ error("A") + trend("A")  + season("A")),
+  model(auto_ets = ETS(log_gdp), ets_AAN  = ETS(log_gdp ~ error("A") + trend("A")  + season("N")),
+  ets_AAdN = ETS(log_gdp ~ error("A") + trend("Ad") + season("N")),ets_AAA  = ETS(log_gdp ~ error("A") + trend("A")  + season("A")),
     ets_AAdA = ETS(log_gdp ~ error("A") + trend("Ad") + season("A")))
 
 # Domestic Demand
 ets_fit_dd <- us_train %>%
-  model(
-    auto_ets = ETS(log_domestic_demand),
+  model(auto_ets = ETS(log_domestic_demand),
     ets_AAN  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("N")), ets_AAdN = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("N")), ets_AAA  = ETS(log_domestic_demand ~ error("A") + trend("A")  + season("A")), ets_AAdA = ETS(log_domestic_demand ~ error("A") + trend("Ad") + season("A")))
 
 # Imports
 ets_fit_imp <- us_train %>%
-  model(
-    auto_ets = ETS(log_imports),
-    ets_AAN  = ETS(log_imports ~ error("A") + trend("A")  + season("N")),
-    ets_AAdN = ETS(log_imports ~ error("A") + trend("Ad") + season("N")),
-    ets_AAA  = ETS(log_imports ~ error("A") + trend("A")  + season("A")),
+  model(auto_ets = ETS(log_imports), ets_AAN  = ETS(log_imports ~ error("A") + trend("A")  + season("N")),
+  ets_AAdN = ETS(log_imports ~ error("A") + trend("Ad") + season("N")), ets_AAA  = ETS(log_imports ~ error("A") + trend("A")  + season("A")),
     ets_AAdA = ETS(log_imports ~ error("A") + trend("Ad") + season("A")))
 ```
 
@@ -261,7 +252,7 @@ ets_fit_imp %>% dplyr::select(auto_ets) %>% gg_tsresiduals() +
   labs(title = "ETS Residual Diagnostics: Log Imports") + theme_bw()
 ```
 
-**Analysis:** Examine each panel. The 2020 COVID shock still appears strongly on the time plot, but otherwise the mean is 0 for every variable in the best ETS models. All gg_tsresiduals plots for each ETS have ACF values within the 95% boundary, and a normally distributed histogram. We can therefor conclude that taking the log of the variables has given us stationary data to work with that's white noise. An Ljung-Box test will also be performed.
+**Analysis:** Examine each panel. The 2020 COVID shock still appears strongly on the time plot, but otherwise the mean is 0 for every variable in the best ETS models. All gg_tsresiduals plots for each ETS have ACF values within the 95% boundary, and a normally distributed histogram. We can therefor conclude that taking the log of the variables has given us stationary data to work with that's white noise. An Ljung-Box test will also be performed to verify our eyeballed claims are correct.
 
 ## Ljung-Box Test on ETS Residuals
 
@@ -330,7 +321,9 @@ ets_accuracy %>% filter(variable %in% c("Log DD", "Log Imports")) %>%
   kableExtra::column_spec(3:6, color = "#2c2c2c")
 ```
 
-Starting with the results of our Log GDP forecast accuracy, we see that the auto-selected ETS model by R has the lowest RMSE of all models. The ETS(A,A,N) model which was our first manually selected model performed the 2nd best out of the other models in terms of RMSE. When plotting the forecast of the future, we will therefor use the R-selected model since it has the lowest RMSE. Moving to the Log of domestic demand and log of imports ETS tests, we actual see the ETS(A,A,N) for Log_dd (domestic demand) has the lowest RMSE. This contrasted our training data results, but doing well on the training data doesn't guarantee a model does well on the test data. This same ETS(A,A,N) was also performing best on the test data for the log_imp variable. Therefor, when plotting our forecasts for the future, we will be using the ETS(A,A,N) model for domestic demand and imports. One important caveat is that while our manual models did well on the training data, that may be affected by the COVID outlier data, so it may not be the absolutely best data.
+**Analysis:** Starting with the results of our Log GDP forecast accuracy, we see that the auto-selected ETS model by R has the lowest RMSE of all models. The ETS(A,A,N) model which was our first manually selected model performed the 2nd best out of the other models in terms of RMSE. When plotting the forecast of the future, we will therefor use the R-selected model since it has the lowest RMSE. Moving to the Log of domestic demand and log of imports ETS tests, we actual see the ETS(A,A,N) for Log_dd (domestic demand) has the lowest RMSE. This contrasted our training data results, but doing well on the training data doesn't guarantee a model does well on the test data. This same ETS(A,A,N) was also performing best on the test data for the logged imports variable. Therefor, when plotting our forecasts for the future, we will be using the ETS(A,A,N) model for domestic demand and imports. One important caveat is that while our manual models did well on the training data, that may be affected by the COVID outlier data, so it may not be the absolutely best data.
+
+## Plotting ETS Forecasts Against Test Data
 
 ```{r ets-forecast-plots}
 #| echo: false
@@ -553,7 +546,7 @@ glance(arima_fit_dd) %>%
     position          = "left",
     font_size         = 13
   ) %>%
-  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#f3e5f5") %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#e8f4f8") %>%
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c") %>%
   kableExtra::row_spec(1, background = "#fffde7")
@@ -574,7 +567,7 @@ glance(arima_fit_imp) %>%
     position          = "left",
     font_size         = 13
   ) %>%
-  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#e8f5e9") %>%
+  kableExtra::row_spec(0, bold = TRUE, color = "#1a1a2e", background = "#e8f4f8") %>%
   kableExtra::column_spec(1, bold = TRUE, color = "#1a1a2e") %>%
   kableExtra::column_spec(2:3, color = "#2c2c2c") %>%
   kableExtra::row_spec(1, background = "#fffde7")
@@ -590,15 +583,7 @@ arima_fit_dd  %>% dplyr::select(auto_arima) %>% report()
 arima_fit_imp %>% dplyr::select(auto_arima) %>% report()
 ```
 
-Using the report function, we get the following **ARIMA specifications for log_gdp, log_dd, and log_imp respectively: ARIMA(0,1,1), ARIMA(0,1,0), and ARIMA(0,1,0)**. Like before, the domestic demand and import variables share the same specifications like the ETS analysis.
-
-For all the logged variables with one difference, here the the specifications for each (GDP, DD, IMP):
-
-ARIMA(0,1,1) –\> AR(0), 1 difference, MA(1)
-
-ARIMA(0,1,0) –\> AR(0), 1 difference, MA(0)
-
-ARIMA(0,1,0) –\> AR(0), 1 difference, MA(0)
+**Analysis:** Using the report function, we get the following ARIMA specifications for log_gdp, log_dd, and log imp. The specifications for each respectively are **ARIMA(0,1,1), ARIMA(0,1,0), and ARIMA(0,1,0)**. Like before, the domestic demand and import variables share the same specifications like the ETS analysis.
 
 # Auto-ARIMA Model Report
 
@@ -696,7 +681,7 @@ arima_accuracy %>%
     "blue", "black"))
 ```
 
-Now we take all our ARIMA models after training them, and apply them to the test data to determine what specifications will be best for forecasting future values. With the R code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For the differenced log of domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
+**Analysis:** Now we take all our ARIMA models after training them, and apply them to the test data to determine what specifications will be best for forecasting future values. With the R code in the chunk above, our table of results colors the RMSE value of the best forming models in blue. For the differenced log of domestic demand, the auto-selected model performs best with an RMSE of 0.0052. For differenced log GDP, both the auto-selected model and ARIMA(0,1,1) model perform equally well, RMSE of 0.0034, so we could go with either model according to R. Lastly for the differenced log imports, the ARIMA(1,1,1) specification did best with an RMSE of 0.0411.
 
 ```{r arima-forecast-plots}
 #| echo: false
@@ -881,7 +866,7 @@ summary(var_p2)
 
 ## VAR Residual Diagnostics
 
-### Portmanteau Serial Correlation Test (Broader version of Box-Pierce and Ljung-Box Tests)
+### Portmanteau Serial Correlation Test
 
 Portmanteau Serial Correlation Test is a broader version of the Box-Pierce and Ljung-Box Test, testing for stationary data series. The null hypothesis is that the data has no series correlation (no autocorrelation), and that there is no data remaining in the errors to be extracted.
 
@@ -960,7 +945,7 @@ glance(fit_var) %>% knitr::kable(format  = "html",
 
 **Analysis:** With the var_aicc and var_bic models, both share the exact same log_lik, AIC, AICc, and BIC values. Both the AICc and BIC values are extremely small and negative, so we should be good with the var specifications we have established such as the lag of 2.
 
-## VAR Forecast on Test Set — Differenced Log Scale
+## VAR Forecast on Test Set Differenced Log Scale
 
 ```{r var-forecast-test-diff}
 #| echo: false
@@ -998,7 +983,7 @@ labs(title = "VAR Forecast vs Actuals: Δ Log Series (2024–2025)",
 
 **Analysis:** VAR forecasts on the differenced scale represent quarter-over-quarter log growth rates. A value of 0.005 corresponds to approximately 0.5% quarterly growth. With the VAR forecasting on the test data, all the forecast values are straight lines, and the scales for y-axis differ in the three plots above. For differenced log GDP and domestic demand, the 80% confidence intervals contain all the real observation values of the variables, and that's a good sign. Unlike the ETS and ARIMA analysis previously, the 80% and 95% confidence intervals for imports do not contain all the real observed values. This could be due to the fact that the import graph's values fluctuate more than the GDP and domestic demand values.
 
-## VAR Forecast on Test Set — Back-Transformed to Levels
+## VAR Forecast on Test Set Transformed Back to Levels
 
 ```{r var-forecast-test-levels}
 #| echo: false
@@ -1231,14 +1216,14 @@ if (nrow(tbl_var) == 0) {
 }
 ```
 
-**Note:** VAR accuracy is measured on the differenced log scale while ETS and ARIMA are on the log level scale — RMSE values are not directly comparable across methods. Within each variable, compare ETS vs ARIMA (same scale). The VAR comparison is informative for understanding the differenced growth forecast quality separately.
+**Note:** VAR accuracy is measured on the differenced log scale while ETS and ARIMA are on the log level scale so RMSE values are not directly comparable across methods. Within each variable, compare ETS vs ARIMA (same scale). The VAR comparison is informative for understanding the differenced growth forecast quality separately.
 
 **Analysis:** From the two tables above we see that the ARIMA model wins when it comes to forecasting log domestic demand, ARIMA and ETS tie when it comes to forecasting GDP, and ETS wins when it comes to forecasting import data.
 
 # Comparing Results - Training and Test Data
 
 | Variable | Best by AICc (within family) | Best RMSEs (test set) |   |
-|----|----|----|----|
+|------------------|-------------------|------------------|------------------|
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 |  |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA auto-selected, RMSE = 0.0052** |  |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS(A,A,N) where RMSE, 0.0396** |  |
@@ -1255,9 +1240,9 @@ stretch <- us_clean |> stretch_tsibble(.init = 40, .step = 4) |> filter(.id != m
 
 # ETS CV
 ets_cv_acc <- bind_rows(
-  stretch |> model(ets_gdp = ETS(log_gdp))                                                        |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log GDP"),
-  stretch |> model(ets_dd  = ETS(log_domestic_demand ~ error("A") + trend("A") + season("N")))    |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log DD"),
-  stretch |> model(ets_imp = ETS(log_imports         ~ error("A") + trend("A") + season("N")))    |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log Imports"))
+  stretch |> model(ets_gdp = ETS(log_gdp)) |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log GDP"),
+  stretch |> model(ets_dd  = ETS(log_domestic_demand ~ error("A") + trend("A") + season("N"))) |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log DD"),
+  stretch |> model(ets_imp = ETS(log_imports ~ error("A") + trend("A") + season("N"))) |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log Imports"))
 
 # ARIMA CV
 ar_cv_acc <- bind_rows(
