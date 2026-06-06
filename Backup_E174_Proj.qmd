@@ -826,13 +826,7 @@ bind_rows(
   kableExtra::column_spec(2:3, color = "#2c2c2c")
 ```
 
-```{r VAR_Dicky-Fuller_Tests}
-us_train_diff %>% features(d_log_gdp, unitroot_ndiffs)
-us_train_diff %>% features(d_log_dd, unitroot_ndiffs)
-us_train_diff %>% features(d_log_imports, unitroot_ndiffs)
-```
-
-**Analysis:** Although our KPSS test p-values are above 0.05, which accepts stationarity, we are still going to move forward with our VAR model. The KPSS test is well documented to be overly sensitive to sudden shifts or 'structural breaks' in the data. In our case, the massive economic shocks from the 2008 financial crisis and the 2020 COVID-19 pandemic are likely throwing the test off. We feel confident moving forward because our other diagnostics contradict the KPSS test: the ADF tests (above) show that no more differencing is needed, and the ACF plots (below) look like clean, stationary white noise.
+**Analysis:** All our P-values are well above 0.05, so we fail to reject the null hypothesis that our data is stationary. We do not need a second difference according to the KPSS and p-value, so we can proceed on analysis.
 
 ## ACF of Differenced Series
 
