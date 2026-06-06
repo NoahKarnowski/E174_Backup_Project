@@ -35,6 +35,8 @@ library(scales)    # Formatting the axis of a graph manually
 library(vars)      # Used for fitting Vector Auto Regressions (VAR Models)
 library(knitr)     # Helps create nice visualizations of results in tables
 library(kableExtra)# Creates nice HTML reports when rendering this file
+library(tibble)
+library(tsibble)
 ```
 
 # Data Loading and Preparation
@@ -794,7 +796,7 @@ train_mat <- us_train_diff %>% as_tibble() %>%
   dplyr::select(d_log_gdp, d_log_dd, d_log_imports) %>% as.matrix()
 ```
 
-## Stationality Check on Differenced Series
+## Stationarity Check on Differenced Series
 
 ```{r var-stationarity}
 #| echo: false
@@ -830,7 +832,7 @@ us_train_diff %>% features(d_log_dd, unitroot_ndiffs)
 us_train_diff %>% features(d_log_imports, unitroot_ndiffs)
 ```
 
-**Analysis:** Although our KPSS test p-values are below 0.05, which technically rejects stationarity, we are still going to move forward with our VAR model. The KPSS test is well documented to be overly sensitive to sudden shifts or 'structural breaks' in the data. In our case, the massive economic shocks from the 2008 financial crisis and the 2020 COVID-19 pandemic are likely throwing the test off. We feel confident moving forward because our other diagnostics contradict the KPSS test: the ADF tests (above) show that no more differencing is needed, and the ACF plots (below) look like clean, stationary white noise.
+**Analysis:** Although our KPSS test p-values are above 0.05, which accepts stationarity, we are still going to move forward with our VAR model. The KPSS test is well documented to be overly sensitive to sudden shifts or 'structural breaks' in the data. In our case, the massive economic shocks from the 2008 financial crisis and the 2020 COVID-19 pandemic are likely throwing the test off. We feel confident moving forward because our other diagnostics contradict the KPSS test: the ADF tests (above) show that no more differencing is needed, and the ACF plots (below) look like clean, stationary white noise.
 
 ## ACF of Differenced Series
 
@@ -1246,6 +1248,40 @@ if (nrow(tbl_var) == 0) {
 | Log GDP | ETS: auto_ets (−391.96); ARIMA: auto_arima / arima_011 (−553.80) | Tied — ETS auto & ARIMA(0,1,1) both RMSE = 0.0034 |  |
 | Log Domestic Demand | ETS: auto_ets (−384.39); ARIMA: auto_arima (−547.12) | **ARIMA auto-selected, RMSE = 0.0052** |  |
 | Log Imports | ETS: auto_ets (−208.78); ARIMA: auto_arima (−375.71) | **ETS(A,A,N) where RMSE, 0.0396** |  |
+
+# Cross Validation
+
+```{r cross-validation}
+
+#| echo: true
+#| warning: false
+#| message: false
+
+stretch <- us_clean |> stretch_tsibble(.init = 40, .step = 4) |> filter(.id != max(.id))
+
+# ETS CV
+ets_cv_acc <- bind_rows(
+  stretch |> model(ets_gdp = ETS(log_gdp))                                                        |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log GDP"),
+  stretch |> model(ets_dd  = ETS(log_domestic_demand ~ error("A") + trend("A") + season("N")))    |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log DD"),
+  stretch |> model(ets_imp = ETS(log_imports         ~ error("A") + trend("A") + season("N")))    |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log Imports"))
+
+# ARIMA CV
+ar_cv_acc <- bind_rows(
+  stretch |> model(ar_gdp = ARIMA(log_gdp))                                                       |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log GDP"),
+  stretch |> model(ar_dd  = ARIMA(log_domestic_demand))                                           |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log DD"),
+  stretch |> model(ar_imp = ARIMA(log_imports ~ 1 + pdq(0,1,1) + PDQ(0,0,0)))                    |> forecast(h=1) |> accuracy(us_clean) |> mutate(variable = "Log Imports"))
+
+# VAR CV (differenced log scale — not directly comparable to ETS/ARIMA)
+var_cv_acc <- us_clean_diff_unkeyed |> stretch_tsibble(.init = 40, .step = 4) |> filter(.id != max(.id)) |>
+  model(var = fable::VAR(vars(d_log_gdp, d_log_dd, d_log_imports)))           |> forecast(h=1) |> accuracy(us_clean_diff_unkeyed)
+
+# Combined CV accuracy table
+bind_rows(ets_cv_acc |> mutate(method = "ETS"),
+          ar_cv_acc  |> mutate(method = "ARIMA")) |>
+  dplyr::select(method, variable, .model, RMSE, MAE, MASE) |> arrange(variable, RMSE)
+
+var_cv_acc |> dplyr::select(.model, .response, RMSE, MAE, MASE)
+```
 
 # Conclusion
 
